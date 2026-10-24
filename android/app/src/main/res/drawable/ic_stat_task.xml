@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Иконка в строке состояния для уведомлений о задачах: знак DDeck, сведённый
+  к силуэту. Android рисует этот слой как альфа-маску, поэтому он должен быть
+  одним сплошным цветом на прозрачном фоне — без фона, градиентов и линий тоньше
+  2 dp при 24 dp, иначе иконка превращается в серое пятно рядом с часами.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportWidth="24"
+  android:viewportHeight="24"
+  android:tint="#FFFFFF">
+
+  <path
+    android:pathData="M6,6 h12 a2,2 0 0 1 2,2 v8 a2,2 0 0 1 -2,2 h-12 a2,2 0 0 1 -2,-2 v-8 a2,2 0 0 1 2,-2 Z"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="2"
+    android:strokeLineJoin="round" />
+
+  <path
+    android:pathData="M8,10 L10.5,12.5 L8,15"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="2"
+    android:strokeLineCap="round"
+    android:strokeLineJoin="round" />
+
+  <path
+    android:pathData="M13,15 H17"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="2"
+    android:strokeLineCap="round" />
+</vector>

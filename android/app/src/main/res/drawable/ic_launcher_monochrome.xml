@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Монохромный слой для тематических иконок (Android 13+): тот же знак, который
+  лончер окрашивает сам.
+
+  Знак занимает центральные 72 x 72 из холста 108 x 108 — ровно то, что маска
+  лончера гарантированно сохраняет. Координаты — собственные координаты логотипа,
+  умноженные на 1.5 и сдвинутые на 18. Без <group> transform: плоские числа
+  рисуются одинаково на любой версии Android.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="108dp"
+  android:height="108dp"
+  android:viewportWidth="108"
+  android:viewportHeight="108">
+
+  <!-- Окно терминала -->
+  <path
+    android:pathData="M33.75,32.25 h40.5 a9.0,9.0 0 0 1 9.0,9.0 v25.5 a9.0,9.0 0 0 1 -9.0,9.0 h-40.5 a9.0,9.0 0 0 1 -9.0,-9.0 v-25.5 a9.0,9.0 0 0 1 9.0,-9.0 Z"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="4.5"
+    android:strokeLineJoin="round" />
+
+  <!-- Приглашение -->
+  <path
+    android:pathData="M37.5,48.75 L44.25,55.5 L37.5,62.25"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="4.5"
+    android:strokeLineCap="round"
+    android:strokeLineJoin="round" />
+
+  <!-- Курсор -->
+  <path
+    android:pathData="M51.75,62.25 H61.5"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="4.5"
+    android:strokeLineCap="round" />
+
+  <!-- Точка связи и дуга -->
+  <path
+    android:pathData="M78.75,35.25 a4.5,4.5 0 1 0 0.01,0 Z"
+    android:fillColor="#FFFFFF" />
+  <path
+    android:pathData="M72.75,30.75 A14.25,14.25 0 0 1 84.75,30.75"
+    android:strokeColor="#FFFFFF"
+    android:strokeWidth="3.6"
+    android:strokeLineCap="round" />
+</vector>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Тема окна. Системный заголовок убран намеренно: интерфейс, который отдаёт
+  харнесс, рисует собственную шапку с учётом safe-area, а вторая, системная
+  полоса заголовка отнимает у телефона видимую строку и выглядит чужеродно.
+
+  forceDarkAllowed=false: страница уже тёмная и сама отвечает за свою палитру,
+  поэтому алгоритмическое затемнение Android не должно перекрашивать её в
+  светлой теме системы.
+-->
+<resources>
+  <style name="DshMobileTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowActionBar">false</item>
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    <item name="android:forceDarkAllowed">false</item>
+  </style>
+</resources>

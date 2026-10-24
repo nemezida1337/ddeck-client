@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DDeck — знак.
+
+  Идея: окно терминала (то, чем является DeepSeek Harness) с приглашением `>_`
+  и точкой связи, вынесенной за угол окна — компьютер, до которого дотягиваются
+  снаружи. Это и есть DDeck.
+
+  Геометрия подобрана под малые размеры: штрих 3 из 48 (6 %), скругления 5, шаг
+  сетки 4, ни одного элемента тоньше 2,4. Цвет — currentColor, поэтому знак
+  работает и на тёмном, и на светлом фоне без отдельной версии.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="DDeck">
+  <title>DDeck</title>
+  <rect x="4.5" y="9.5" width="33" height="29" rx="6" fill="none" stroke="currentColor" stroke-width="3"/>
+  <path d="M13 20.5 L17.5 25 L13 29.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22.5 29.5 H29" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="40.5" cy="14.5" r="3" fill="currentColor"/>
+  <path d="M36.5 8.5 A9.5 9.5 0 0 1 44.5 8.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
