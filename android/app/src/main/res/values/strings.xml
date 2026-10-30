@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Все пользовательские строки оболочки.
+
+  Русский — язык по умолчанию: он лежит в `values/`, английский перевод — в
+  `values-en/`. Ни одна строка интерфейса не должна оставаться в Kotlin: текст,
+  зашитый в код, нельзя перевести, и он же попадает в уведомления, которые
+  система показывает вне приложения.
+
+  Строки без перевода помечены `translatable="false"`: это название продукта и
+  примеры адресов, которые одинаковы в любом языке.
+-->
+<resources>
+
+  <!-- Общее: название приложения и иконки. -->
+  <string name="app_name" translatable="false">DDeck</string>
+
+  <!-- Экран подключения. -->
+  <string name="connect_subtitle">Подключение к компьютеру с DeepSeek Harness</string>
+  <string name="connect_help">1. На компьютере откройте DSH → панель «DDeck».\n2. Включите Tailscale на Mac и телефоне (один tailnet).\n3. Нажмите «Новый код» и отсканируйте QR. Код живёт 5 минут.</string>
+  <string name="connect_origin_label">Адрес компьютера</string>
+  <string name="connect_origin_hint" translatable="false">https://host:3449</string>
+  <string name="connect_key_label">Ключ сопряжения</string>
+  <string name="connect_key_hint">одноразовый ключ из панели «DDeck»</string>
+  <string name="connect_scan_qr">Сканировать QR с компьютера</string>
+  <string name="connect_help_button">Как подключиться?</string>
+  <string name="connect_lead">Откройте панель DDeck на компьютере и нажмите «Новый код».</string>
+  <string name="connect_manual_open">Ввести адрес и код вручную</string>
+  <string name="connect_manual_title">Подключение вручную</string>
+  <string name="connect_manual_close">Скрыть ручной ввод</string>
+  <string name="connect_help_steps">1. На компьютере откройте DSH → панель «DDeck».\n2. Включите Tailscale или свой сервер (см. docs/RELAY).\n3. Нажмите «Новый код» и отсканируйте QR.\n\nКод живёт 5 минут. Старый QR не подойдёт — возьмите свежий.</string>
+  <string name="connect_help_troubleshoot">Если ошибка про отпечаток: нажмите «Забыть» у старого компьютера и сопрягите заново по свежему QR.\nПри timeout проверьте, что Mac не спит, DSH запущен и Tailscale/сервер доступен.</string>
+  <string name="connect_help_docs">Полная инструкция</string>
+  <string name="connect_help_close">Понятно</string>
+  <string name="connect_open">Открыть</string>
+  <string name="connect_saved_empty_short">Пока нет сохранённых компьютеров.</string>
+  <string name="diagnostics_title">Диагностика</string>
+  <string name="diagnostics_copy">Копировать</string>
+  <string name="diagnostics_copied">Диагностика скопирована</string>
+  <string name="diagnostics_hint">Долгое нажатие на версию — диагностика для баг-репорта. Не отправляйте QR/коды/токены.</string>
+  <string name="connect_pair">Сопрячь и подключиться</string>
+  <string name="connect_saved_label">Сопряжённые компьютеры</string>
+  <string name="connect_saved_empty">Пока ни одного. Сопрягите первый — он появится здесь.</string>
+  <string name="connect_forget">Забыть</string>
+  <string name="connect_qr_prompt">Наведите на QR в панели «DDeck»</string>
+  <string name="connect_need_origin_or_link">Нужны адрес с ключом или ссылка-приглашение</string>
+  <string name="connect_pairing">Сопряжаю…</string>
+  <string name="connect_paired">Сопряжено: %1$s</string>
+  <string name="connect_reconnecting">Переподключаюсь к %1$s…</string>
+  <string name="connect_failed">Не удалось подключиться: %1$s.</string>
+  <string name="connect_failed_repair">Не удалось подключиться: %1$s. Если компьютер отозвал устройство, сопрягите заново.</string>
+
+  <!-- Ошибки сопряжения и подключения: одна фраза на одно действие человека. -->
+  <string name="connect_error_identity">приглашение устарело или относится к другому компьютеру: откройте панель DDeck → «Новый код» и отсканируйте свежий QR</string>
+  <string name="connect_error_key_rejected">компьютер отклонил ключ (%1$d); ключ одноразовый и живёт пять минут</string>
+  <string name="connect_error_no_mobile_access">по этому адресу нет мобильного доступа (404)</string>
+  <string name="connect_error_device_limit">на компьютере достигнут предел подключённых устройств; откройте «DDeck» и отключите лишние</string>
+  <string name="connect_error_too_many_attempts">компьютер просит подождать: слишком много попыток (429)</string>
+  <string name="connect_error_unavailable">компьютер не смог ответить (%1$d); проверьте, что DSH запущен</string>
+  <string name="connect_error_status">компьютер ответил %1$d</string>
+  <string name="connect_error_certificate">сертификат компьютера не совпал с закреплённым: возможно, он перевыпустил сертификат. Забудьте этот компьютер и сопрягите заново по свежему QR</string>
+  <string name="connect_error_host_not_found">адрес не найден: проверьте имя компьютера</string>
+  <string name="connect_error_timeout">компьютер не ответил вовремя: он выключен или недоступен по этому адресу</string>
+  <string name="connect_error_refused">не удалось подключиться к компьютеру: проверьте, что он включён и доступен по этому адресу</string>
+  <string name="connect_error_network">сеть недоступна: проверьте подключение телефона</string>
+
+  <!-- Экран сессии: выбор файла и скачивание. -->
+  <string name="session_file_chooser_title">Выберите файл</string>
+  <string name="session_download_failed">Не удалось скачать файл: %1$s</string>
+  <string name="session_download_unknown_error">неизвестная ошибка</string>
+  <string name="download_saved_title">Файл сохранён</string>
+
+  <!-- Каналы уведомлений. Названия видны в системных настройках, поэтому это ресурсы. -->
+  <string name="channel_files_name">Файлы из DSH</string>
+  <string name="channel_files_description">Сохранённые файлы и экспорт сессий</string>
+  <string name="channel_session_name">Активная сессия</string>
+  <string name="channel_session_description">Пока сессия открыта, приложение держит связь с компьютером</string>
+  <string name="channel_tasks_name">Задачи DSH</string>
+  <string name="channel_tasks_description">Завершение задач и ожидание ответа</string>
+
+  <!-- Постоянное уведомление службы переднего плана. -->
+  <string name="service_session_text">Сессия открыта — жду завершения задачи</string>
+
+  <!--
+    Уведомления о задачах. Заголовок и текст готовит компьютер на английском,
+    поэтому мост переводит известные фразы по ресурсам этого файла.
+  -->
+  <string name="notification_fallback_title" translatable="false">DeepSeek Harness</string>
+  <string name="notification_task_finished">Задача завершена</string>
+  <string name="notification_task_finished_dsh">Задача в DSH завершена</string>
+  <string name="notification_input_needed">Нужен ваш ответ</string>
+  <string name="notification_choice_needed">DSH ждёт вашего выбора</string>
+
+  <!-- Ошибки моста, которые страница показывает человеку. -->
+  <string name="bridge_error_notifications_disabled">уведомления отключены для этого приложения</string>
+  <string name="bridge_error_unsupported">эта сборка не поддерживает %1$s</string>
+</resources>

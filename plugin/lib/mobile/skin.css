@@ -1,0 +1,1167 @@
+/*
+ * DDeck — мобильный слой (оформление страницы клиента).
+ *
+ * Документ — клиент DeepSeek Harness: переписка, инструменты и стриминг живут в его
+ * бандле, и переписывать их значило бы заново реализовать продукт. Здесь только то, что
+ * на телефоне сделано для мыши: сетка из трёх колонок, постоянная рейка, панель,
+ * которая отнимает ширину вместо того, чтобы накрывать, и мелкие цели, в которые
+ * палец не попадает.
+ *
+ * Классы клиента хешированные (`pI_x6G_header`), поэтому правила адресуются по
+ * окончанию имени (`:is([class$="_header"], [class*="_header "])`) или по публичным data-атрибутам клиента;
+ * собственные классы и атрибуты слоя начинаются с `dshm-`. Каждое правило ниже —
+ * результат замера на живом телефоне (360 × 800, плотность 3): в комментариях указано,
+ * что именно было измерено и почему правило выглядит так.
+ *
+ * ОГЛАВЛЕНИЕ
+ *  1. Основа: тема и системные цвета
+ *  2. Каркас и боковая панель (выдвижной ящик)
+ *  3. Чат: шапка и лента сообщений
+ *  4. Композер и очередь сообщений
+ *  5. Карточка вопроса агента и plan review
+ *  6. Плагины и автозадачи: заголовки, детали, мелкие цели
+ *  7. Настройки, меню и диалоги
+ *  8. Правая панель: файлы, терминал, браузер, журнал
+ *  9. Панель Remote и служебные строки
+ * 10. Переопределения: ландшафт с открытой клавиатурой
+ */
+
+/* ── 1. ОСНОВА: ТЕМА И СИСТЕМНЫЕ ЦВЕТА ───────────────────────────────────────────
+ * Переменных вида --dsw-alias-* в клиенте нет (проверено), а системный Canvas не
+ * переключается на лету: в «светлой» пробе текст становился чёрным, а фон оставался
+ * тёмным — нечитаемо. Поэтому тему читает слой и выставляет свои переменные явно.
+ * Тема приходит из color-scheme клиента (см. applyTheme в skin.js).
+ */
+
+html[data-dshm-theme="dark"]{--dshm-surface:#1b1b1c;--dshm-raised:color-mix(in srgb, var(--dshm-surface,#1b1b1c) 92%, var(--dshm-ink,#ffffff));--dshm-ink:#ffffff;--dshm-line:rgba(255,255,255,.14);--dshm-scrim:rgba(0,0,0,.45)}
+
+html[data-dshm-theme="light"]{--dshm-surface:#ffffff;--dshm-raised:color-mix(in srgb, var(--dshm-surface,#ffffff) 94%, var(--dshm-ink,#111114));--dshm-ink:#111114;--dshm-line:rgba(0,0,0,.14);--dshm-scrim:rgba(0,0,0,.28)}
+
+/* ── 2. КАРКАС И БОКОВАЯ ПАНЕЛЬ (ВЫДВИЖНОЙ ЯЩИК) ─────────────────────────────────
+ * Сетка кадра, рейка, панель, затенение, кнопка меню и всё, что живёт внутри
+ * боковой панели: поиск, строки сессий и рабочих областей, действия выбранной
+ * строки, подвал панели. Исходно `display: grid` с колонками `56px 304px 0px`;
+ * в открытой панели `280px 80px 0px` — из 360 px ширины содержимому остаётся 80,
+ * то есть телефон становится непригодным. На телефоне колонка одна, а панель
+ * приходит поверх — как в любом мобильном приложении. Все замеры — 360 × 800,
+ * плотность 3.
+ */
+
+/* Только каркас приложения: `_frame` есть ещё у десятка сеток (например, плитки
+ * вложений), и глобальное правило рвало их раскладку. */
+:is([class$="_frame"], [class*="_frame "]):has(> :is([class$="_centerCol"], [class*="_centerCol "])){grid-template-columns:1fr!important}
+
+:is([class$="_centerCol"], [class*="_centerCol "]){grid-column:1!important;grid-row:1!important;min-width:0!important}
+
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]){grid-column:1!important;grid-row:1!important;min-width:0!important}
+
+/* Правая колонка стоит в той же ячейке сетки, что и содержимое, и, будучи нулевой
+ * ширины, всё равно перехватывала касания: аудит насчитал 12 элементов, которые
+ * «накрыты pI_x6G_rightbarCol» — заголовок, кнопки копирования, реакции. Нажатия
+ * проходят только у её собственного содержимого.
+ */
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]){pointer-events:none!important}
+
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]) > *{pointer-events:auto}
+
+/* Один слой вместо двух: у клиента внутренний root ящика имел свой фон и ширину
+ * меньше колонки, из-за чего меню выглядело как панель на панели. Фон внутреннего
+ * root прозрачный, ширина — на всю колонку; остаётся один край и одна поверхность. */
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]) > div > [class*="_root"]{
+  background:transparent!important;
+  width:100%!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]){position:fixed!important;top:0;bottom:0;left:0;width:min(19rem,84vw)!important;z-index:60;transform:translate3d(-102%,0,0);will-change:transform;backface-visibility:hidden;transition:transform .22s cubic-bezier(.2,.7,.3,1);background:var(--dshm-surface,#1b1b1c)!important;color:var(--dshm-ink,#ffffff)!important;border-right:1px solid var(--dshm-line,rgba(255,255,255,.14))!important;box-shadow:.75rem 0 2rem rgba(0,0,0,.45)!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);overflow:hidden!important;overscroll-behavior:contain}
+
+/* Панель живёт в собственном слое композитора.
+   *
+   * Замеры: без слоя открытие стоило 167–267 мс и до шести длинных задач — браузер
+   * каждый раз перерисовывал всю колонку. С `will-change: transform` и сдвигом через
+   * translate3d открытие и закрытие укладываются в 8–9 мс без длинных задач.
+   */
+/* !important обязателен: наш <style> вставлен в <head> раньше стилей клиента, и при
+   * равной специфичности панель оставалась тёмной в светлой теме.
+   */
+/* Прокрутка, а не обрезка: рабочих областей и сессий может быть много, и
+   * `overflow: hidden` просто съедал бы нижние строки.
+   */
+html[data-dshm-drawer] :is([class$="_sidebarCol"], [class*="_sidebarCol "]){transform:translate3d(0,0,0)}
+
+/* Затемнение под панелью: нажатие снаружи закрывает её — привычный жест. */
+.dshm-scrim{position:fixed;inset:0;z-index:55;background:var(--dshm-scrim,rgba(0,0,0,.72));opacity:0;pointer-events:none;transition:opacity .22s ease;border:0;padding:0;cursor:pointer}
+
+html[data-dshm-drawer] .dshm-scrim{opacity:1;pointer-events:auto}
+
+.dshm-menu{position:fixed;z-index:50;left:max(.5rem,env(safe-area-inset-left));top:calc(env(safe-area-inset-top) + .5rem);width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--dshm-line,rgba(255,255,255,.14));border-radius:.75rem;background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#ffffff);cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+.dshm-menu svg{width:1.25rem;height:1.25rem}
+
+html[data-dshm-drawer] .dshm-menu{opacity:0;pointer-events:none}
+
+/* Кнопки «Отключить» и подобные — замер: 36 px (min-height 2.25rem). */
+/* Панель — родная колонка клиента: свои иконки, свои строки, свои группы. Свою копию
+ * интерфейса не рисуем: она теряла иконки и выглядела чужой.
+ */
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]){visibility:visible!important}
+
+/* Перехватчик изменения размера окна — настольная деталь.
+ *
+ * Аудит: он перекрывал кнопку «1 напоминание» в шапке чата, и та не нажималась вовсе.
+ */
+:is([class$="_frame"], [class*="_frame "]) :is([class$="_handle"], [class*="_handle "]){display:none!important}
+
+/* Подвал боковой панели.
+ *
+ * Замер: строке 256 px, в ней две кнопки плагинов по ~128 px — впритык, без зазора, и
+ * длинная подпись штатного плагина обрезается («Mobile acce…»). На телефоне список
+ * кнопок лучше ставить в столбик: подписи читаются целиком, а палец не попадает между
+ * двумя соседними целями.
+ */
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]){display:flex!important;flex-wrap:wrap!important;gap:.25rem!important;padding:.25rem 0!important}
+
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]) > *{flex:1 1 100%!important;min-width:0!important}
+
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]) button{width:100%!important;min-width:0!important;height:2.75rem!important;justify-content:flex-start!important}
+
+/* Поиск по сессиям в боковой панели.
+ *
+ * Замер: поле 197 × 20 px, шрифт 13 px — палец по нему промахивается, а мелкий
+ * шрифт заставляет приближать. Поднимаем до 36 px и 16 px шрифта; строка поиска
+ * растёт вместе с полем.
+ */
+:is([class$="_searchInput"], [class*="_searchInput "]){height:2.75rem!important;font-size:1rem!important;padding:0 .5rem!important}
+
+/* Строки боковой панели.
+ *
+ * Замер: «Плагины» и «Автоматические задачи» 252x36, рабочая область 256x34, «Новая
+ * сессия» 252x38 — всё ниже 44, которые палец находит без прицеливания. Поднимаем до
+ * 44 и добавляем вертикальный воздух между смысловыми блоками.
+ */
+:is([class$="_panelRow"], [class*="_panelRow "]), :is([class$="_projectRow"], [class*="_projectRow "]), :is([class$="_newSession"], [class*="_newSession "]){min-height:2.75rem!important;align-items:center!important}
+
+:is([class$="_panelList"], [class*="_panelList "]){gap:.125rem!important}
+
+:is([class$="_groupSection"], [class*="_groupSection "]){margin-bottom:.25rem!important}
+
+/* Действия строки сессии — по первому касанию.
+ *
+ * На настольном клиенте закрепить/архивировать сессию можно с наведения мыши;
+ * на телефоне наведения нет, а одиночное касание сразу открывало диалог, и
+ * добраться до действий было нечем. Первый тап выбирает строку: подсветка,
+ * высота 44 и кнопки действий (меню, архив, закрепление). Второй тап открывает
+ * диалог. Кнопки — 32 px: три по 44 в строку шириной 256 не помещаются, но сама
+ * строка остаётся крупной целью, а действия доступны с первого касания.
+ */
+[role=treeitem][data-dshm-picked]{position:relative!important;min-height:2.75rem!important;background:color-mix(in srgb,var(--dshm-ink,#ffffff) 9%,transparent)!important;border-radius:.5rem!important;padding-right:5.25rem!important}
+
+[data-dshm-picked] :is([class$="_rowActions"], [class*="_rowActions "]){position:absolute!important;right:.25rem!important;top:50%!important;transform:translateY(-50%)!important;display:inline-flex!important;align-items:center!important;gap:.125rem!important;flex:none!important;background:var(--dshm-surface,#1b1b1c)!important;border-radius:.5rem!important;padding-left:.25rem!important;z-index:2!important}
+
+[data-dshm-picked] :is([class$="_rowActions"], [class*="_rowActions "]) button{width:2rem!important;height:2rem!important;min-width:2rem!important}
+
+/* Время у выбранной строки уступает место действиям: название важнее. */
+[data-dshm-picked] :is([class$="_time"], [class*="_time "]){display:none!important}
+
+:is([class$="_sessionOverflowButton"], [class*="_sessionOverflowButton "]){min-height:2.75rem!important}
+
+/* Боковая панель: бренд, свернуть, поиск, строки дерева. */
+:is([class$="_brand"], [class*="_brand "]){min-height:2.75rem!important}
+
+:is([class$="_toggle"], [class*="_toggle "]),:is([class$="_searchButton"], [class*="_searchButton "]){width:2.75rem!important;height:2.75rem!important}
+
+:is([class$="_list"], [class*="_list "]) [role=treeitem]{min-height:2.75rem!important}
+
+/* ── 3. ЧАТ: ШАПКА И ЛЕНТА СООБЩЕНИЙ ─────────────────────────────────────────────
+ * Шапка может адресоваться только шапке чата: признак, который есть только у неё,
+ * публикует сам клиент — `data-conversation-header-leading` на ведущем блоке (он же
+ * используется для перетаскивания окна). Без этой привязки правило накрывало все
+ * шестнадцать компонентов с собственным `.header` — от полосы очереди до шапок
+ * диалогов. Название сессии занимает две строки: полное имя требует 311 px при
+ * доступных 203, а порог в 203 px давал не заголовок, а его начало.
+ */
+
+/* Шапка начиналась с y = 0, то есть под системной строкой: замер показал
+ * `header` 0,0 360x76 при безопасной зоне 37. Название сессии уезжало под часы,
+ * а кнопка меню ложилась поверх заголовка. Теперь это обычная мобильная шапка:
+ * безопасная зона сверху, фиксированная высота, место слева под кнопку.
+ *
+ * Правило адресуется ОДНОЙ шапке — шапке чата, и только ей.
+ *
+ * Раньше здесь стоял `:is([class$="_header"], [class*="_header "])` без привязки, и под него попадали все
+ * шестнадцать компонентов интерфейса, у которых есть собственный `.header`:
+ * заголовок полосы очереди (36 px → 89), шапка настроек (54 → 89), заголовки
+ * блоков вызова инструментов в переписке, заголовок списка файлов, шапки
+ * диалогов выбора каталога, входа в учётную запись и справки по горячим
+ * клавишам. Каждый из них получал 37 px мёртвого отступа сверху и высоту 89 px.
+ * Признак, который есть только у шапки чата, публикует сам клиент:
+ * `data-conversation-header-leading` на ведущем блоке (он же используется для
+ * перетаскивания окна). У пустой сессии заголовка нет, но ведущий блок есть —
+ * проверка селектора на живой странице это подтвердила.
+ */
+/* Шапка приложения (ConversationHeader) всегда помечена data-window-drag; это
+ * стабильный признак, в отличие от :has(leading) и вариантов blank/sessionless,
+ * которые клиент меняет по состоянию. Безопасная зона и высота задаются один раз
+ * для всех состояний шапки, чтобы при загрузке сессии она не «прыгала». */
+header[data-window-drag]:has([data-conversation-header-leading]){padding-top:calc(env(safe-area-inset-top) + .625rem)!important;height:calc(3.375rem + env(safe-area-inset-top))!important;box-sizing:border-box!important}
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]){display:flex!important;align-items:center!important}
+
+/* Заголовок сессии должен занимать оставшееся место.
+ *
+ * Замер показал: `titleCluster` — 0 px, `crumb` — 16 px, то есть название было сжато
+ * до невидимости, и в шапке оставались только иконки. Шапка — flex, поэтому заголовку
+ * нужно разрешить расти и обрезать длинное имя многоточием, а не сжимать в ноль.
+ *
+ * Область правила — та же шапка чата: `_titleRow` есть ещё и в карточках плагинов, и
+ * без привязки отступ 52 px сдвигал каждую карточку вправо и обрезал её хвост.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_titleRow"], [class*="_titleRow "]){padding-left:3.25rem!important;padding-right:.25rem!important;flex:1 1 auto!important;min-width:0!important;height:100%!important;align-items:center!important;overflow:hidden!important}
+
+/* Название сессии — двумя строками.
+ *
+ * Замер на «Связь десктопа с мобильным приложением»: полное имя требует 311 px,
+ * а на строку оставалось 203 — обрезалось до 65 %. Порог в 203 px давал не
+ * заголовок, а его начало. Две строки по 14 px занимают 40 px при высоте шапки
+ * 52 px (89 — вместе с безопасной зоной), поэтому полное имя помещается без
+ * роста шапки и без наезда на что-либо. Длинные имена, которые не влезают и в
+ * две строки, по-прежнему обрезаются многоточием.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_titleCluster"], [class*="_titleCluster "]){flex:1 1 auto!important;min-width:0!important;max-width:none!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbs"], [class*="_crumbs "]){flex:1 1 auto!important;min-width:0!important;overflow:visible!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbSeg"], [class*="_crumbSeg "]){flex:1 1 auto!important;min-width:0!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumb"], [class*="_crumb "]), header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbCurrent"], [class*="_crumbCurrent "]){max-width:100%!important;overflow:hidden!important;white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;text-overflow:ellipsis!important;line-height:1.2!important;max-height:2.4em!important;word-break:break-word!important}
+
+/* Режим и вкладки — настольные понятия: «Standard mode» и вкладки «Chat»/«Trajectory»
+ * занимали вторую строку и вытесняли переписку. Вкладка одна, режим не выбирают.
+ *
+ * Скрываем их ТОЛЬКО в шапке чата. Без привязки правило накрывало ещё два нужных
+ * места: шапку карточки вопроса (кнопки «свернуть», «закрыть» и «Взять время» при
+ * обратном отсчёте) и шапку списка сессий («Добавить рабочую область» и фильтры).
+ * Замер: именно эти группы пропадали на телефоне; с привязкой к шапке чата
+ * (data-conversation-header-leading) они остаются.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_headerActions"], [class*="_headerActions "]), header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_tabs"], [class*="_tabs "]){display:none!important}
+
+:is([class$="_scrollBody"], [class*="_scrollBody "]){padding-top:0!important}
+
+/* Пустое состояние.
+ *
+ * Замер: заголовок 78,263 197x32, бейдж «Предварительная версия» 95,301 163x20 — смещён
+ * на 17 px вправо от заголовка и прижат к нему на 6 px. Выглядит как случайно
+ * приклеенная плашка. Разводим по вертикали и центруем по одной оси с заголовком.
+ */
+:is([class$="_previewBadge"], [class*="_previewBadge "]){margin-top:.625rem!important;align-self:center!important}
+
+[data-actions-reveal] :is([class$="_action"], [class*="_action "]){width:2.75rem!important;height:2.75rem!important}
+
+/* ── 4. КОМПОЗЕР И ОЧЕРЕДЬ СООБЩЕНИЙ ─────────────────────────────────────────────
+ * Композер стоит у нижнего края и не уезжает под клавиатуру: приложение учитывает
+ * клавиатуру само, а отступ безопасной зоны — слой. Кнопки «+» и «Отправить» были
+ * 28 × 28 и 34 × 34 при шрифте ввода 14 px — для пальца мелко; вид не меняем,
+ * растим зону нажатия псевдоэлементом, поле поднимаем до 16 px. Строка статистики
+ * скрыта статически: любое перестроение в момент фокуса сбрасывает его (замер —
+ * фокус ставился и через 150 мс возвращался к BODY, клавиатура закрывалась).
+ * Очередь стоит над композером: заголовок 36 px поднимаем до 44, у списка убираем
+ * горизонтальную прокрутку, кнопки строки растим вверх и вниз.
+ */
+
+:is([class$="_composerSeat"], [class*="_composerSeat "]){padding-bottom:calc(env(safe-area-inset-bottom) + .25rem)!important}
+
+/* Строка статистики на телефоне скрыта всегда, а не только при открытой клавиатуре.
+ *
+ * Сначала она пряталась по высоте окна — и это ломало ввод: клавиатура открывается,
+ * правило срабатывает, вёрстка перестраивается, и Android WebView сбрасывает фокус
+ * с поля. Замер: фокус ставился и через 150 мс возвращался к `BODY`, клавиатура
+ * закрывалась. Любое перестроение в момент фокуса имеет ту же цену, поэтому прячем
+ * один раз при загрузке.
+ */
+
+/* Композер.
+ *
+ * Замер: кнопки «+» 28x28 и «Отправить» 34x34, шрифт ввода 14 px. Для пальца это мелко:
+ * Android просит 44, а 14 px на телефоне ещё и просит приблизить. Кнопки растут зоной
+ * нажатия (вид не меняется), поле — до 16 px.
+ */
+[class*="_composerStack"] button{position:relative}
+
+[class*="_composerStack"] button::after{content:'';position:absolute;inset:-6px}
+
+/* Чипы композера (план, только чтение, модель) — это <select>, а не <button>;
+ * замер: 28 px высоты и 13 px шрифта, пальцем не попасть. */
+[class*="_composerStack"] select{min-height:2.75rem!important;font-size:1rem!important}
+
+/* Поле ввода опознаётся по атрибуту редактора: у клиента своя обёртка композера
+ * (`_card`/`_scroll`/`_grow`), и поиск по имени контейнера её не находит.
+ */
+[data-lexical-editor="true"]{font-size:1rem!important;line-height:1.45!important}
+
+[data-queue-dock] :is([class$="_header"], [class*="_header "]){min-height:2.75rem!important}
+
+/* Список очереди: у родных строк ширина на пиксель больше контейнера, и под
+ * сообщениями рисуется горизонтальная полоса прокрутки. Она крадёт 9 px высоты
+ * у полосы, которая и без того отнимает место у переписки. По горизонтали тут
+ * прокручивать нечего: строка — это текст и три кнопки. */
+[data-queue-dock] :is([class$="_list"], [class*="_list "]){overflow-x:hidden!important}
+
+/* Кнопки строки («изменить», «удалить», «вмешаться») — 28 × 28. Вид оставляем,
+ * зону нажатия растим псевдоэлементом вверх и вниз: по горизонтали соседние
+ * кнопки стоят через 10 px, и расширять их в стороны значило бы делить касания. */
+[data-queue-dock] :is([class$="_action"], [class*="_action "]){position:relative!important}
+
+[data-queue-dock] :is([class$="_action"], [class*="_action "])::after{content:'';position:absolute;inset:-.5rem -.25rem}
+
+/* Крестик вложения — 18×18 у любого типа (картинка и файл используют разные
+ * обёртки: `_imageItem` и `_item`). Замер: у файла зона была ~30 px, палец
+ * промахивался. Общее правило: сама кнопка 18 px, зона нажатия — 44 через ::after. */
+html[data-dshm-theme] :is([class$="_remove"], [class*="_remove "]){position:relative!important}
+
+html[data-dshm-theme] :is([class$="_remove"], [class*="_remove "])::after{content:''!important;position:absolute!important;inset:-.8125rem!important}
+
+/* Композер: «+», микрофон, отправка. */
+[class*="_composerStack"] :is([class$="_add"], [class*="_add "]), [class*="_composerStack"] :is([class$="_primary"], [class*="_primary "]){min-width:2.75rem!important;min-height:2.75rem!important}
+
+/* Строка статистики хода под композером: три значения не помещаются в 321 px
+ * при 16 px и обрезаются по «…». Ширины пузырей задаёт клиент (112 + 132 + 53),
+ * поэтому уменьшаем только шрифт: в те же ширины влезает больше текста, а
+ * раскладка и переносы остаются клиентскими (попытка снять max-width развалила
+ * строку — пузыри наехали друг на друга). */
+:is([data-composer-dock="true"], [data-dshm-composer-dock]){font-size:.75rem!important}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button,
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) [class*="_label"]{font-size:.75rem!important}
+
+/* Триггеры выпадающих меню: доступ к рабочей области, модель, микрофон — 28 px. */
+:is([class$="_trigger"], [class*="_trigger "]){min-width:2.75rem!important;min-height:2.75rem!important}
+
+/* Нижняя панель — горизонтальный скролл-док под большой палец.
+ *
+ * Киллер-фича: в панель помещается сколь угодно много инструментов, а не только
+ * статистика. Док листается пальцем с мягкой остановкой, края подсказывают
+ * прокрутку градиентом, нажатия пружинят. Анимация шторок — с мягким входом.
+ */
+:is([data-composer-dock="true"], [data-dshm-composer-dock]){
+  overflow-x:auto!important; overflow-y:hidden!important;
+  flex-wrap:nowrap!important; justify-content:flex-start!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  gap:.5rem!important; padding:.25rem .5rem!important;
+  min-height:3.5rem!important;
+  mask-image:linear-gradient(to right,transparent 0,#000 .75rem,#000 calc(100% - .75rem),transparent 100%);
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 .75rem,#000 calc(100% - .75rem),transparent 100%);
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock])::-webkit-scrollbar{display:none}
+:is([data-composer-dock="true"], [data-dshm-composer-dock])[data-dshm-scroll="start"]{
+  mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 1.25rem),transparent 100%);
+  -webkit-mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 1.25rem),transparent 100%);
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock])[data-dshm-scroll="end"]{
+  mask-image:linear-gradient(to right,transparent 0,#000 1.25rem,#000 100%);
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 1.25rem,#000 100%);
+}
+/* Клиентские кнопки статистики лежат в span-якорях нулевой ширины: после
+ * превращения дока в скролл-контейнер они перестали занимать место и наезжали
+ * друг на друга. Якорь должен быть шириной с кнопку. */
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) [data-composer-stat]{
+  width:auto!important; min-width:2.75rem!important; height:2.75rem!important;
+  display:inline-flex!important; align-items:center!important; flex:0 0 auto!important;
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button,
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) .dshm-tool{
+  transition:transform .14s cubic-bezier(.2,.8,.2,1), background-color .18s ease, color .18s ease;
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button:active,
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) .dshm-tool:active{transform:scale(.92)}
+
+/* Нижняя строка статистики — панель иконок, а не подписи.
+ *
+ * Владелец продукта: подробные подписи «Ходов: 1, шагов: 6 · 249 токенов/с ·
+ * попадание в кэш» на телефоне не нужны и занимают всю строку; нужны кнопки-
+ * инструменты. Клиент уже даёт кнопки с полной статистикой в aria-label и
+ * открывает по нажатию диалог «Статистика сессии» — оставляем их, но прячем
+ * подписи и делаем квадратными 44 px. Сюда же переносим кнопку «Команда агентов»
+ * (на телефоне она спрятана в шапке), чтобы инструменты были под большим пальцем.
+ */
+:is([data-composer-dock="true"], [data-dshm-composer-dock]){gap:.375rem!important}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button{
+  width:2.75rem!important; min-width:2.75rem!important;
+  height:2.75rem!important; min-height:2.75rem!important;
+  padding:0!important; display:inline-flex!important;
+  align-items:center!important; justify-content:center!important;
+  border-radius:.75rem!important; flex:0 0 auto!important;
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button [class*="_label"],
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button [class*="_sep"]{display:none!important}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) button svg{width:1.25rem!important;height:1.25rem!important}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) [class*="_root"]{min-width:2.75rem!important;font-size:.75rem!important}
+/* Инструменты дока — такие же лёгкие иконки, как системные кнопки статистики:
+ * без рамок и плотных плашек, чтобы не рябило в глазах. */
+.dshm-tool{
+  width:2.75rem; height:2.75rem; display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; padding:0; border-radius:.75rem;
+  border:0; background:transparent; color:var(--dshm-muted,rgba(255,255,255,.78));
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:background-color .16s ease, color .16s ease, transform .14s cubic-bezier(.2,.8,.2,1);
+}
+.dshm-tool svg{width:1.25rem;height:1.25rem;opacity:.86}
+.dshm-tool:hover,.dshm-tool:focus-visible{background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff)}
+.dshm-tool:active{transform:scale(.92);background:var(--dshm-raised,#26262a)}
+.dshm-tool[aria-expanded="true"]{background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff)}
+/* Пока открыт левый ящик, правая панель/вкладки/журнал скрыты: никаких слоёв. */
+[data-dshm-under-drawer="1"]{visibility:hidden!important}
+
+/* Свёрнутый док: остаются сетка и шеврон, высота плавно уменьшается. */
+@keyframes dshm-dock-in{
+  from{opacity:0;transform:translateY(.5rem)}
+  to{opacity:1;transform:none}
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock])[data-dshm-enter="1"]{animation:dshm-dock-in .22s cubic-bezier(.2,.8,.2,1)}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]){transition:max-height .24s ease,min-height .24s ease,padding .24s ease}
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]){
+  max-height:2.75rem!important; min-height:2.75rem!important;
+  overflow:hidden!important; padding-top:.125rem!important; padding-bottom:.125rem!important;
+}
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]) > *:not([data-dshm-grid]):not(.dshm-dock-toggle){
+  display:none!important;
+}
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]) .dshm-dock-toggle{margin-left:auto}
+.dshm-dock-toggle{
+  position:sticky!important; right:0; z-index:6;
+  background:var(--dshm-surface,#1b1b1c)!important;
+  box-shadow:-.5rem 0 .75rem rgba(0,0,0,.35);
+}
+.dshm-dock-toggle svg{transition:transform .2s ease}
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]) .dshm-dock-toggle svg{transform:rotate(180deg)}
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]){display:none!important}
+
+/* Свёрнутый док — одна кнопка «все инструменты» в строке композера, а не
+ * отдельный ряд под ним: место не занимает, тап раскрывает док вниз. */
+.dshm-grid-launcher{
+  display:none!important; flex:0 0 auto; align-items:center; justify-content:center;
+  width:2.25rem; height:2.25rem; padding:0; border:0; border-radius:.65rem;
+  background:transparent; color:inherit; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+.dshm-grid-launcher svg{width:1.125rem;height:1.125rem;opacity:.86}
+.dshm-grid-launcher:active{background:var(--dshm-raised,#26262a)}
+html[data-dshm-dock-collapsed="1"] .dshm-grid-launcher{display:inline-flex!important;animation:dshm-launcher-in .16s cubic-bezier(.2,.8,.2,1)}
+@keyframes dshm-launcher-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+html[data-dshm-dock-collapsed="1"] .dshm-grid-launcher + *{margin-left:0}
+
+/* Перетаскивание инструмента в доке: кнопка приподнимается, остальные остаются на месте. */
+.dshm-tool.dshm-dragging{
+  transform:scale(1.08); z-index:5; opacity:.95;
+  box-shadow:0 .25rem .875rem rgba(0,0,0,.45);
+  transition:none!important;
+}
+:is([data-composer-dock="true"], [data-dshm-composer-dock])[data-dshm-dragging="1"]{scroll-behavior:auto;cursor:grabbing}
+
+.dshm-tool:focus, .dshm-tool:focus-visible{outline:none!important}
+.dshm-tool:not([aria-expanded="true"]):focus{background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff)}
+.dshm-tool{position:relative;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+/* Живое состояние дока: идёт ход — сетка подсвечена, контекст заполняется —
+ * кольцо меняет цвет, завершение мигает. */
+[data-dshm-busy="1"] [data-dshm-grid]{
+  box-shadow:inset 0 0 0 1px var(--dshm-accent,#6b8afd),0 0 .75rem rgba(107,138,253,.45)!important;
+}
+[data-dshm-context="warn"] [data-dshm-context-tool]{box-shadow:inset 0 0 0 1px #e0a52a!important}
+[data-dshm-context="crit"] [data-dshm-context-tool]{box-shadow:inset 0 0 0 1px #e05a4f!important}
+[data-dshm-done="1"] [data-dshm-grid]{animation:dshm-done 1.1s ease-out}
+@keyframes dshm-done{0%{box-shadow:inset 0 0 0 1px var(--dshm-accent,#6b8afd),0 0 0 0 rgba(107,138,253,.65)}100%{box-shadow:inset 0 0 0 1px var(--dshm-accent,#6b8afd),0 0 0 .75rem rgba(107,138,253,0)}}
+
+/* Сетка всех инструментов: свайп вверх по доку или кнопка-сетка. */
+.dshm-grid-scrim{position:fixed;inset:0;z-index:980;background:rgba(0,0,0,.5);opacity:0;transition:opacity .18s ease}
+.dshm-grid-scrim[data-dshm-show="1"]{opacity:1}
+.dshm-grid{
+  position:fixed;left:0;right:0;bottom:0;z-index:990;
+  display:flex;flex-direction:column;max-height:82vh;
+  border-radius:1rem 1rem 0 0;border-top:1px solid var(--dshm-line,rgba(255,255,255,.14));
+  background:var(--dshm-surface,#16181c);box-shadow:0 -.75rem 2rem rgba(0,0,0,.45);
+  padding:2.25rem .75rem calc(env(safe-area-inset-bottom) + .75rem);
+  box-sizing:border-box;transform:translateY(105%);transition:transform .22s cubic-bezier(.16,1,.3,1);
+}
+.dshm-grid[data-dshm-show="1"]{transform:none}
+.dshm-grid::before{content:'';position:absolute;top:.7rem;left:50%;transform:translateX(-50%);width:2.25rem;height:.25rem;border-radius:999px;background:var(--dshm-line,rgba(255,255,255,.2))}
+.dshm-grid-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.dshm-grid-title{font-size:1.0625rem;font-weight:600;color:var(--dshm-ink,#fff);flex:1 1 auto}
+.dshm-grid-close{width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:.75rem;background:transparent;color:var(--dshm-ink,#fff);font-size:1.4rem;cursor:pointer}
+.dshm-grid-search{
+  width:100%;height:2.75rem;margin:0 0 .5rem;padding:0 .875rem;box-sizing:border-box;
+  border-radius:.75rem;border:1px solid var(--dshm-line,rgba(255,255,255,.14));
+  background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff);font:inherit;font-size:1rem;
+}
+.dshm-grid-cells{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(5.25rem,1fr));
+  gap:.5rem;overflow-y:auto;overscroll-behavior:contain;padding:.125rem 0 .25rem;
+}
+.dshm-grid-cell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.375rem;
+  min-height:5rem;padding:.5rem .25rem;box-sizing:border-box;
+  border:1px solid var(--dshm-line,rgba(255,255,255,.12));border-radius:.875rem;
+  background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff);
+  font:inherit;font-size:.75rem;line-height:1.15;text-align:center;cursor:pointer;
+  transition:transform .12s ease,background-color .16s ease;
+}
+.dshm-grid-cell:active{transform:scale(.96)}
+.dshm-grid-cell svg{width:1.375rem;height:1.375rem}
+.dshm-grid-cell[data-dshm-hidden="1"]{display:none}
+.dshm-grid-cell{position:relative}
+.dshm-grid-cell[data-dshm-dock-hidden="1"]{opacity:.55}
+.dshm-grid-cell[data-dshm-dock-hidden="1"]::after{
+  content:'＋'; position:absolute; top:.2rem; right:.35rem;
+  font-size:.9rem; line-height:1; color:var(--dshm-accent,#6b8afd);
+}
+.dshm-grid[data-dshm-edit="1"] .dshm-grid-cell{opacity:.92}
+.dshm-grid[data-dshm-edit="1"] .dshm-grid-cell[data-dshm-dock-hidden="1"]{opacity:.5}
+.dshm-grid[data-dshm-edit="1"] .dshm-grid-cell::before{
+  content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  border-radius:.875rem; background:rgba(0,0,0,.35); font-size:1.4rem; color:#fff; opacity:0;
+}
+.dshm-grid[data-dshm-edit="1"] .dshm-grid-cell:not([data-dshm-dock-hidden="1"])::before{opacity:1}
+.dshm-grid-edit{
+  height:2.75rem; padding:0 .75rem; border-radius:.75rem; border:1px solid var(--dshm-line,rgba(255,255,255,.14));
+  background:var(--dshm-raised,#26262a); color:var(--dshm-ink,#fff); font:inherit; font-size:.8125rem; cursor:pointer;
+}
+.dshm-grid-edit[data-dshm-active="1"]{background:var(--dshm-accent,#6b8afd);border-color:transparent;color:#fff}
+.dshm-grid-reset{display:none}
+.dshm-grid[data-dshm-edit="1"] .dshm-grid-reset{display:inline-flex;align-items:center}
+
+
+.dshm-grid-empty{padding:1rem;color:var(--dshm-muted,rgba(255,255,255,.6));font-size:.875rem}
+
+/* Первый запуск: одна подсказка, что панель листается и раскрывается. */
+.dshm-dock-hint{
+  position:fixed;z-index:960;left:50%;transform:translateX(-50%);
+  bottom:calc(env(safe-area-inset-bottom) + 6.5rem);
+  padding:.5rem .875rem;border-radius:999px;
+  border:1px solid var(--dshm-line,rgba(255,255,255,.16));
+  background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff);
+  font-size:.8125rem;line-height:1.2;white-space:nowrap;
+  box-shadow:0 .375rem 1.25rem rgba(0,0,0,.4);
+  opacity:0;transition:opacity .25s ease;pointer-events:none;
+}
+.dshm-dock-hint[data-dshm-show="1"]{opacity:1}
+
+/* Завершение, пока человек не в чате: точка «есть готовый ответ» на сетке. */
+[data-dshm-dock-hidden="1"]{display:none!important}
+:is([data-composer-dock="true"], [data-dshm-composer-dock]) [data-dshm-dock-hidden="1"]{display:none!important}
+[data-dshm-unread="1"] [data-dshm-grid]{position:relative}
+[data-dshm-unread="1"] [data-dshm-grid]::after{
+  content:''; position:absolute; top:.15rem; right:.15rem; width:.5rem; height:.5rem;
+  border-radius:999px; background:#57c26a; box-shadow:0 0 0 2px var(--dshm-surface,#16181c);
+}
+
+/* Бегущие фоновые задачи: бейдж пульсирует. */
+[data-dshm-running="1"] .dshm-badge{animation:dshm-pulse 1.6s ease-in-out infinite}
+@keyframes dshm-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.75}}
+
+/* Ручка шторки: за неё шторка закрывается свайпом вниз. */
+.dshm-sheet-handle{
+  position:absolute;top:0;left:0;right:0;height:2.5rem;z-index:3;
+  touch-action:none;cursor:grab;
+}
+.dshm-sheet-handle::before{
+  content:'';position:absolute;top:.7rem;left:50%;transform:translateX(-50%);
+  width:2.25rem;height:.25rem;border-radius:999px;background:var(--dshm-line,rgba(255,255,255,.2));
+}
+
+/* Подсказка по долгому нажатию: иконки в доке не подписаны, а знать, что это,
+ * нужно. Показывается над кнопкой и гаснет при отпускании. */
+.dshm-tip{
+  position:fixed; z-index:1200; transform:translate(-50%,-100%);
+  max-width:80vw; padding:.375rem .625rem; border-radius:.5rem;
+  border:1px solid var(--dshm-line,rgba(255,255,255,.16));
+  background:var(--dshm-raised,#26262a); color:var(--dshm-ink,#fff);
+  font-size:.75rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  pointer-events:none; opacity:0; transition:opacity .12s ease;
+}
+.dshm-tip[data-dshm-show="1"]{opacity:1}
+
+.dshm-notify-hint{
+  position:fixed; z-index:1250; left:50%; bottom:calc(env(safe-area-inset-bottom) + 5.5rem);
+  transform:translateX(-50%); max-width:calc(100vw - 2rem); box-sizing:border-box;
+  padding:.5rem .875rem; border-radius:.75rem; border:1px solid var(--dshm-line,rgba(255,255,255,.16));
+  background:var(--dshm-raised,#26262a); color:var(--dshm-ink,#fff); font:inherit; font-size:.8125rem;
+  text-align:left; cursor:pointer; box-shadow:0 .75rem 2rem rgba(0,0,0,.45);
+}
+.dshm-badge{
+  position:absolute; top:-.2rem; right:-.2rem; min-width:1rem; height:1rem;
+  padding:0 .2rem; border-radius:999px; box-sizing:border-box;
+  background:var(--dshm-accent,#6b8afd); color:#fff;
+  font-size:.625rem; line-height:1rem; font-weight:600; text-align:center;
+  pointer-events:none;
+}
+
+
+/* Панели «Команда агентов», «Субагенты», «Фоновые задачи» клиент рисует
+ * выпадашками, привязанными к скрытой кнопке в шапке: они появлялись в левом
+ * верхнем углу, без прокрутки и без кнопки закрытия. На телефоне это нижние
+ * шторки: во всю ширину, до 78vh, со своей прокруткой и ручкой. */
+.dshm-sheet-scrim{
+  position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.45);
+  opacity:0; transition:opacity .2s ease; pointer-events:auto;
+}
+.dshm-sheet-scrim[data-dshm-show="1"]{opacity:1}
+[data-dshm-sheet]{
+  position:fixed!important; left:0!important; right:0!important; bottom:0!important; top:auto!important;
+  width:100%!important; max-width:none!important; height:auto!important;
+  max-height:78vh!important;
+  border-radius:1rem 1rem 0 0!important;
+  border:0!important; border-top:1px solid var(--dshm-line,rgba(255,255,255,.14))!important;
+  background:var(--dshm-surface,#16181c)!important;
+  box-shadow:0 -.75rem 2rem rgba(0,0,0,.45)!important;
+  z-index:1000!important;
+  overflow:hidden!important;
+  padding-top:2.5rem!important;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 2rem)!important;
+  outline:0!important;
+  animation:dshm-sheet-in .22s cubic-bezier(.16,1,.3,1);
+  transition:transform .28s cubic-bezier(.2,1.15,.3,1);
+}
+/* Прокручивается содержимое, а не сама шторка: иначе кнопка закрытия уезжает. */
+[data-dshm-sheet] > *:not(.dshm-sheet-close){
+  max-height:calc(78vh - 3.25rem)!important;
+  overflow-y:auto!important; overflow-x:hidden!important;
+}
+@keyframes dshm-sheet-in{from{transform:translateY(40%);opacity:.6}to{transform:none;opacity:1}}
+[data-dshm-sheet] > *{max-width:none!important}
+[data-dshm-sheet] [class*="_body"],[data-dshm-sheet] [class*="_list"]{
+  max-height:calc(78vh - 3rem)!important; overflow-y:auto!important;
+}
+.dshm-sheet-close{
+  position:absolute; top:.375rem; right:.5rem; z-index:5;
+  width:2.75rem; height:2.75rem; display:inline-flex; align-items:center; justify-content:center;
+  border:0; border-radius:.75rem; background:transparent; color:var(--dshm-ink,#fff);
+  font:inherit; font-size:1.25rem; cursor:pointer;
+}
+.dshm-sheet-close::before{content:'×';line-height:1}
+
+/* Кнопка сворачивания ящика — внизу панели, над строкой учётной записи. */
+/* Сворачивание ящика — обычная строка в подвале меню, а не плавающая карточка
+ * поверх списка сессий (иначе меню выглядит как два слоя). */
+.dshm-collapse-row{
+  display:flex; align-items:center; gap:.625rem; width:100%; min-height:2.75rem;
+  box-sizing:border-box; padding:.375rem .5rem; margin-top:.25rem;
+  border:0; border-radius:.5rem; background:transparent;
+  color:var(--dshm-muted,rgba(255,255,255,.78)); font:inherit; font-size:.875rem;
+  cursor:pointer; text-align:left; -webkit-tap-highlight-color:transparent;
+}
+.dshm-collapse-row:hover,.dshm-collapse-row:focus-visible{background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff)}
+.dshm-collapse-row svg{width:1.25rem;height:1.25rem;flex:0 0 auto}
+
+/* Верхнюю кнопку «Свернуть боковую панель» уводим вниз: на телефоне до неё
+ * не дотянуться большим пальцем, а внизу есть место. */
+:is([class$="_sidebarCol"], [class*="_sidebarCol "]) button:is([class$="_toggle"], [class*="_toggle "])[aria-label]:not([data-dshm-collapse]){display:none!important}
+
+/* «…» в шапке чата дублирует две редкие команды (скачать журнал, отзыв); на
+ * телефоне её место нужно заголовку. Действия остаются в настольной версии. */
+header[class*="_header"] button:is([class$="_moreButton"], [class*="_moreButton "]){display:none!important}
+
+/* ── 5. КАРТОЧКА ВОПРОСА АГЕНТА И PLAN REVIEW ────────────────────────────────────
+ * Без штатного мобильного слоя карточка приходит в настольной вёрстке: замер на
+ * телефоне — сама карточка 353 × 496, но опции уезжают выше её края (y = 223 при
+ * верхней границе 256), кнопки «Пропустить»/«Отправить» выходят за правый край
+ * (x = 158…366 при ширине 353), шапка вопроса обрезана. Карточка — во всю ширину,
+ * шапка видна, список опций прокручивается отдельно, кнопки — двумя колонками по
+ * 44 px. У plan review разметка другая (полоса шапки, сводка и подвал — три div без
+ * атрибутов), поэтому его раскладка описана отдельно. Компонент штатного плагина
+ * `dsh-mobile-question-fixes` тоже одевает карточку — его правки перебиваются
+ * точечно, специфичностью выше.
+ */
+
+[data-question-key],[data-plan-review-key]{box-sizing:border-box!important;width:100%!important;height:auto!important;min-width:0!important;flex:none!important;align-self:flex-end!important;padding:6px max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right))!important}
+
+[data-question-key]>section,[data-plan-review-key]>section{width:100%!important;height:auto!important;min-height:0!important;max-width:none!important;max-height:min(68dvh,520px)!important;border-radius:16px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+
+/* Шапка и подвал карточки — фиксированной высоты, середина прокручивается.
+ * Замер: без этого секция 520 px содержала 127 + 385 + 98 = 610 px и уезжала
+ * внутрь себя — кнопки «Пропустить»/«Отправить» оказывались за нижним краем. */
+[data-question-key]>section>header, [data-question-key]>section>footer{flex:0 0 auto!important}
+
+/* У карточки вопроса тело помечено data-question-scroll. У plan review разметка
+ * другая: полоса шапки, сводка и подвал — три div без атрибутов. Поэтому общее
+ * правило сужено до вопроса, а plan review получает свою раскладку ниже. */
+[data-question-key]>section>div{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:auto!important}
+
+[data-question-scroll]{overscroll-behavior:contain;scroll-padding-bottom:12px}
+
+/* У plan review ровно три div: полоса, сводка, подвал. Сводка не прокручивается
+ * (заголовок и двухстрочный абзац с обрезкой), поэтому ничего не растягиваем и не
+ * скроллим — только держим подвал целиком в карточке. */
+[data-plan-review-key]>section>div{flex:0 0 auto!important}
+
+[data-question-key]>section>header{display:flex!important;visibility:visible!important;flex:none!important;gap:8px!important;padding:12px 8px 4px 14px!important}
+
+[data-question-key]>section>header h2{min-width:0!important;overflow-wrap:anywhere!important;font-size:1rem!important;line-height:1.4!important}
+
+[data-question-key]>section>header button{min-width:2.5rem!important;min-height:2.5rem!important}
+
+[data-question-key] [role=radio],[data-question-key] [role=checkbox]{min-height:3rem!important;touch-action:manipulation}
+
+[data-question-key]>section>footer{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center!important;flex:none!important;gap:6px 8px!important;margin-top:4px!important;padding:6px 10px 10px!important}
+
+[data-question-key]>section>footer>:last-child{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+
+[data-question-key]>section>footer>:last-child button{width:100%!important;min-height:2.75rem!important}
+
+[data-plan-review-key]>section>div:last-child{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding:8px 12px 10px!important}
+
+[data-plan-review-key]>section>div:last-child>div:last-child{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+
+/* Первую (outline) не растягиваем на всю строку: в разметке порядок «Запросить
+ * изменения» → «Подтвердить», и полноширинная outline-кнопка оставляла primary
+ * полклетки. Две равные колонки, primary справа. */
+[data-plan-review-key]>section>div:last-child>div:last-child>button{width:100%!important;min-height:2.75rem!important}
+
+[data-plan-review-key]>section>div:last-child button{width:100%!important;min-height:2.75rem!important}
+
+/* Компонент штатного плагина `dsh-mobile-question-fixes` тоже одевает карточку
+ * вопроса — но по-своему: он делает прокручиваемой всю секцию, а тело карточки
+ * оставляет фиксированным. На нашей странице это значит, что кнопки
+ * «Пропустить»/«Отправить» уезжают ниже видимой части, и человек их не видит.
+ * Перебиваем его точечно (у его правил !important, поэтому берём специфичностью
+ * выше): шапка и подвал фиксированы, прокручивается только список опций.
+ */
+html[data-dshm-theme] [data-question-key] > section:has(> [data-question-scroll]){display:flex!important;flex-direction:column!important;overflow:hidden!important}
+
+html[data-dshm-theme] [data-question-key] > section > div[data-question-scroll]{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+
+html[data-dshm-theme] [data-question-key] > section > header, html[data-dshm-theme] [data-question-key] > section > footer{flex:0 0 auto!important}
+
+/* Ссылка «Открыть план целиком» в полосе plan review: 169×40, до 44 не хватает
+ * двух пикселей с каждой стороны — расширяем зону нажатия, не двигая полосу. */
+:is([class$="_reviewLink"], [class*="_reviewLink "]){position:relative!important}
+
+:is([class$="_reviewLink"], [class*="_reviewLink "])::after{content:'';position:absolute;inset:-.125rem -.25rem}
+
+[data-question-key] :is([class$="_pager"], [class*="_pager "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+/* ── 6. ПЛАГИНЫ И АВТОЗАДАЧИ: ЗАГОЛОВКИ, ДЕТАЛИ, МЕЛКИЕ ЦЕЛИ ─────────────────────
+ * Вторичные экраны (плагины, автозадачи) начинались с самого верха: заголовок
+ * «Плагины» в точке 24,28 — под системной строкой и под нашей кнопкой меню. Им
+ * нужна безопасная зона и место слева под меню. Аудит нашёл на телефоне цели
+ * высотой 20–24 px: подпись карточки плагина («Открыть Субагент» 60 × 20),
+ * переключатель плагина (36 × 20), кнопка «О плагинах» (20 × 20) и поле поиска
+ * задач (260 × 24 при обёртке 36). Ниже зона нажатия доведена до 44 px; где можно —
+ * псевдоэлементом, чтобы вид и вёрстка не менялись. В конце секции — общие
+ * правила для тулбаров и полей страниц.
+ */
+
+/* Вторичные экраны (плагины, автозадачи, настройки) начинались с самого верха:
+ * замер показал заголовок «Плагины» в точке 24,28 — под системной строкой и под нашей
+ * кнопкой меню. Им тоже нужна безопасная зона и место слева под меню.
+ */
+:is([class$="_pageHeading"], [class*="_pageHeading "]){padding-top:calc(env(safe-area-inset-top) + .5rem)!important;padding-left:3.25rem!important;box-sizing:border-box!important}
+
+/* Страница плагина (детальный экран).
+ *
+ * Замер: кнопка «К списку плагинов» — 312 × 15 в точке y = 28, то есть в полосе
+ * системной строки (37 px): касание забирает система, а сама цель в четыре раза
+ * ниже пальцевого минимума. Верх детального экрана получает безопасную зону,
+ * зона нажатия крошек растёт псевдоэлементом без сдвига вёрстки.
+ */
+:is([class$="_detailTop"], [class*="_detailTop "]){padding-top:calc(env(safe-area-inset-top) + .25rem)!important;padding-left:3.25rem!important;box-sizing:border-box!important}
+
+:is([class$="_detailTop"], [class*="_detailTop "]) :is([class$="_crumb"], [class*="_crumb "]){position:relative!important}
+
+:is([class$="_detailTop"], [class*="_detailTop "]) :is([class$="_crumb"], [class*="_crumb "])::after{content:'';position:absolute;inset:-.9375rem -.5rem}
+
+/* Угол шапки — настольные кнопки: правый ящик, новая вкладка, разделить, полный экран.
+ * На телефоне они занимали место справа от названия сессии и ловили нажатия.
+ * Замер: «Открыть правую боковую панель» стояла в точке 320,11 при экране 360.
+ */
+:is([class$="_headerCorner"], [class*="_headerCorner "]){display:none!important}
+
+/* Карточки плагинов. Заголовок — кнопка 20 px внутри карточки, которую
+ * целиком открывает `::after` самой кнопки; собственный прямоугольник всё
+ * равно должен быть взрослым, потому что в него целятся и с клавиатуры, и
+ * вспомогательными технологиями. padding + отрицательный margin дают 44 px
+ * без роста карточки: замер после правки — карточка та же, заголовок на месте.
+ * Привязка к `_cardLink`: класс `_cardOpen` есть ещё у карточки плана и у
+ * карточки создания расписания, и им такой высоты не нужно.
+ */
+:is([class$="_cardLink"], [class*="_cardLink "]) :is([class$="_cardOpen"], [class*="_cardOpen "]){display:inline-flex!important;align-items:center!important;box-sizing:border-box!important;min-height:2.75rem!important;padding-block:.75rem!important;margin-block:-.75rem!important}
+
+/* «О плагинах» — круглая кнопка сведений в заголовке страницы. */
+:is([class$="_infoButton"], [class*="_infoButton "]){position:relative!important}
+
+:is([class$="_infoButton"], [class*="_infoButton "])::after{content:'';position:absolute;inset:-.75rem}
+
+/* Переключатель включения плагина: 36 × 20. В сторону расширяем мало — рядом
+ * край карточки, — но и 44 px по высоте достаточно, чтобы не прицеливаться.
+ * Класс у переключателя статический (`_switch_<hash>_<line>`), поэтому опора —
+ * роль, которую он и так объявляет вспомогательным технологиям.
+ */
+[role="switch"]{position:relative!important}
+
+[role="switch"]::after{content:'';position:absolute;inset:-.75rem -.25rem}
+
+/* Поле поиска задач на странице «Автоматические задачи».
+ *
+ * Замер: обёртка `.searchField` 36 px, поле ввода внутри — 24. Для пальца это
+ * мелко, а курсор в поле ввода ещё и 14 px шрифтом просит приближения на
+ * Android. Поднимаем поле до 44 и шрифт до 16; область прокрутки страницы —
+ * `_listPane`, чтобы не задеть одноимённое поле в справке по клавишам.
+ */
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]){height:2.75rem!important;box-sizing:border-box!important}
+
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) > :first-child{height:100%!important}
+
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) input{height:100%!important;font-size:1rem!important;line-height:1.4!important}
+
+/* Кнопка очистки внутри поля — 28 px и прижата вправо; поднимаем до 44. */
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) button{width:2.75rem!important;height:2.75rem!important;margin-right:0!important}
+
+/* Детали автозадачи: полоса вкладок «Правила»/«Записи» и кнопки «Связанная
+ * сессия», «Действия», «Закрыть подробности» (28×28) лежали на y = 8…15 — в зоне
+ * системной строки (37 px): часы печатались поверх вкладок, а закрытие касанием
+ * не срабатывало. Полоса получает безопасную зону, отступ слева под плавающее
+ * меню и переносится на две строки, чтобы три кнопки получили по 44 px.
+ */
+:is([class$="_detailTabsBar"], [class*="_detailTabsBar "]){padding-top:calc(env(safe-area-inset-top) + .25rem)!important;padding-left:3.25rem!important;padding-right:.5rem!important;padding-bottom:.25rem!important;height:auto!important;min-height:calc(2.75rem + env(safe-area-inset-top))!important;box-sizing:border-box!important;flex-wrap:wrap!important;align-items:center!important;gap:.25rem!important}
+
+[class*="_detailTabsBar"] button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+[class*="_detailTab"]{min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+/* Список компонентов на детали плагина: строка 308 px делилась на иконку 41,
+ * описание 116, статус 68 и тумблер 36 — описанию оставалось 116 px, и оно
+ * переносилось по 1–2 слова. Разрешаем перенос: иконка и описание занимают первую
+ * строку, статус и тумблер уходят на следующую.
+ */
+:is([class$="_rowLine"], [class*="_rowLine "]){flex-wrap:wrap!important}
+
+:is([class$="_rowMain"], [class*="_rowMain "]){flex:1 1 calc(100% - 57px)!important;min-width:0!important}
+
+:is([class$="_rowLine"], [class*="_rowLine "]) :is([class$="_rowState"], [class*="_rowState "]){margin-left:calc(41px + 1rem)!important}
+
+:is([class$="_moreBack"], [class*="_moreBack "]){min-height:2.75rem!important}
+
+/* Автозадачи и плагины: кнопки создания/добавления/фильтров 28–32 px. */
+:is([class$="_newButton"], [class*="_newButton "]),:is([class$="_addPrimary"], [class*="_addPrimary "]),:is([class$="_addMore"], [class*="_addMore "]),:is([class$="_groupMore"], [class*="_groupMore "]){min-height:2.75rem!important}
+
+[class*="_filterTab"]{min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+/* Детали плагина/задачи: поля ввода. */
+:is([class$="_detail"], [class*="_detail "]) :is(input,select,textarea){min-height:2.75rem!important;font-size:1rem!important}
+
+:is([class$="_guideToggle"], [class*="_guideToggle "]),:is([class$="_registryToggle"], [class*="_registryToggle "]),:is([class$="_registryOption"], [class*="_registryOption "]){min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+:is([class$="_registryOption"], [class*="_registryOption "]) [role=radio],:is([class$="_registryOption"], [class*="_registryOption "]) input[type=radio]{min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_pageIntro"], [class*="_pageIntro "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_toolbar"], [class*="_toolbar "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+/* Инструменты просмотра diff и селектор файла: 28 px. */
+:is([class$="_tool"], [class*="_tool "]){min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_selectorButton"], [class*="_selectorButton "]){min-height:2.75rem!important}
+
+:is([class$="_toolbar"], [class*="_toolbar "]) input,:is([class$="_toolbar"], [class*="_toolbar "]) select{min-height:2.75rem!important;font-size:1rem!important}
+
+/* ── 7. НАСТРОЙКИ, МЕНЮ И ДИАЛОГИ ────────────────────────────────────────────────
+ * Пункты меню и списков — 34 px у родных, поля и кнопки закрытия в диалогах и
+ * справке по горячим клавишам — 18–28 px. Всё это поднимаем до 44 px, а поля — до
+ * 16 px шрифта: мелкий шрифт в поле ввода заставляет Android приближать страницу.
+ * Правило `[role=dialog] button` широкое намеренно: диалоги клиента рисуют кнопки
+ * своими классами, и без него цели остаются мелкими.
+ */
+
+/* Пункты выпадающих меню — 34 px у родных: «Переименовать», «Архивировать»
+ * и прочие действия в них жмутся пальцем. 44 — та же мера, что у строк панели. */
+[role=menuitem]{min-height:2.75rem!important}
+
+[data-shortcut-modal] :is([class$="_navCell"], [class*="_navCell "]){min-height:2.75rem!important}
+
+/* Меню слэш-команд и диалоги: пункты и поля — пальцевого размера.
+ * У активного пункта в className два класса (`_item _active`), поэтому суффиксный
+ * селектор его не ловил — берём вхождение и только кнопки, чтобы не растянуть
+ * служебные span-ы пункта. */
+[role=listbox] button[class*="_item"],[role=menu] button[class*="_item"]{min-height:2.75rem!important}
+
+[role=dialog] :is(input,select,textarea),[data-shortcut-modal] :is(input,select,textarea){min-height:2.75rem!important;font-size:1rem!important}
+
+[role=dialog] button[class*="_close"],[data-shortcut-modal] button[class*="_close"]{width:2.75rem!important;height:2.75rem!important}
+
+/* Настройки на телефоне: клиент рисует двухколоночную модалку — замер 312 × 752,
+ * навигация 188 px + содержимое 124 px, из-за чего текст переносится по 1–3 символа.
+ * На узком экране панель занимает весь кадр, разделы становятся строкой вкладок
+ * сверху, содержимое получает всю ширину и вертикальную прокрутку. */
+@media (max-width: 700px){
+  [data-shortcut-modal="settings"]{
+    position:fixed!important; inset:0!important;
+    width:100%!important; height:100dvh!important;
+    max-width:none!important; max-height:100dvh!important;
+    margin:0!important; border:0!important; border-radius:0!important;
+    padding-top:env(safe-area-inset-top)!important;
+    padding-bottom:env(safe-area-inset-bottom)!important;
+    box-sizing:border-box!important;
+    display:flex!important; flex-direction:column!important;
+    background:var(--dshm-surface,#16181c)!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]){
+    width:100%!important; height:auto!important; flex:0 0 auto!important;
+    display:flex!important; flex-direction:column!important;
+    border-right:0!important; padding:.5rem .75rem 0!important;
+    box-sizing:border-box!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navTitle"], [class*="_navTitle "]){
+    margin:0 0 .25rem!important; font-size:1.25rem!important; line-height:1.3!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navList"], [class*="_navList "]){
+    display:flex!important; flex-direction:row!important; flex-wrap:nowrap!important;
+    gap:.25rem!important; width:100%!important; overflow-x:auto!important;
+    padding-bottom:.375rem!important; scrollbar-width:none;
+    border-bottom:1px solid var(--dshm-line,rgba(255,255,255,.12));
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navCell"], [class*="_navCell "]){
+    flex:0 0 auto!important; width:auto!important; min-width:0!important;
+    min-height:2.75rem!important; padding:0 .75rem!important; white-space:nowrap!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]){
+    width:100%!important; min-width:0!important; flex:1 1 auto!important;
+    overflow-y:auto!important; overflow-x:hidden!important;
+    padding:0 .75rem 1rem!important; box-sizing:border-box!important;
+  }
+  /* Карточки настроек внутри — настольные двухколоночные: аватар 42 px и текстовая
+   * колонка, которая в тесной модалке получала ширину 0 и переносила текст по слову.
+   * На телефоне карточка становится колонкой, аватар и текст — обычной строкой. */
+  [data-shortcut-modal="settings"] :is([class$="_section"], [class*="_section "]){width:100%!important}
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]){
+    flex-direction:column!important; align-items:stretch!important; gap:.5rem!important;
+    width:100%!important; height:auto!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_identity"], [class*="_identity "]){
+    flex-direction:row!important; align-items:center!important;
+    width:100%!important; height:auto!important; gap:.75rem!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_identityCopy"], [class*="_identityCopy "]){
+    width:auto!important; flex:1 1 auto!important; min-width:0!important; height:auto!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_name"], [class*="_name "]),
+  [data-shortcut-modal="settings"] :is([class$="_status"], [class*="_status "]){width:auto!important}
+  [data-shortcut-modal="settings"] :is([class$="_accountInfo"], [class*="_accountInfo "]){align-self:flex-start!important; width:auto!important}
+
+  /* Строки настроек с пояснением настольные: текстовая колонка и контрол справа.
+   * В тесной модалке пояснению доставалась ширина 48 px (замер: desc 0 px),
+   * контрол наезжал на текст. На телефоне строка становится колонкой: пояснение
+   * сверху, контрол ниже во всю ширину. */
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]):has(:is([class$="_rowText"], [class*="_rowText "])){
+    flex-direction:column!important; align-items:stretch!important;
+    gap:.5rem!important; height:auto!important; width:100%!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) :is([class$="_rowText"], [class*="_rowText "]){
+    width:100%!important; min-width:0!important; max-width:none!important;
+    box-sizing:border-box!important; padding-right:0!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) :is([class$="_desc"], [class*="_desc "]){
+    width:auto!important; min-width:0!important; max-width:none!important;
+    box-sizing:border-box!important; padding-right:0!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]):has(:is([class$="_rowText"], [class*="_rowText "])) > :not(:is([class$="_rowText"], [class*="_rowText "])){
+    width:100%!important; max-width:none!important; align-self:stretch!important;
+  }
+  /* Заголовок группы «Встроенные»: кнопка + селект пресета; селект с настольной
+   * минимальной шириной выезжал за экран на 36 px. */
+  [data-shortcut-modal="settings"] :is([class$="_headerEnd"], [class*="_headerEnd "]){
+    flex:1 1 auto!important; min-width:0!important; max-width:100%!important;
+    justify-content:flex-end!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_headerEnd"], [class*="_headerEnd "]) :is(select,button){
+    min-width:0!important; max-width:100%!important;
+  }
+  [data-shortcut-modal="settings"] select{max-width:100%!important}
+
+
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]) :is([class$="_header"], [class*="_header "]){
+    width:100%!important; min-height:2.75rem!important; position:sticky!important; top:0!important;
+    display:flex!important; align-items:center!important; justify-content:flex-end!important;
+    background:var(--dshm-surface,#16181c)!important; z-index:2!important;
+  }
+}
+
+/* Диалог «Добавить плагин»: текстовые ссылки-кнопки и выбор реестра — 15–28 px. */
+[role=dialog] button{min-height:2.75rem!important}
+
+/* ── 8. ПРАВАЯ ПАНЕЛЬ: ФАЙЛЫ, ТЕРМИНАЛ, БРАУЗЕР, ЖУРНАЛ ──────────────────────────
+ * Содержимое панели на телефоне полезно, а настольные оконные операции — нет.
+ * Замер при открытой панели: сверху появлялись «Разделить» (28 × 28), «Выйти из
+ * полноэкранного режима» и «Новая вкладка» — этого на телефоне не существует; и
+ * весь ряд лежал в полосе системной строки (y = 10), где касания забирает система.
+ * Оставляем закрытие панели ниже безопасной зоны и вход в панель — 44 × 44.
+ * Классы правой панели статические (`_tabHostHeader_<hash>_<line>`), поэтому
+ * окончание имени тут не работает — ищем вхождение. Тулбары браузера (38 px) и
+ * журнала (кнопки 20–24 px, select 11 px) поднимаем до 44 и 16 px шрифта. Высота
+ * строк журнала зашита в виртуализацию (`INSPECTOR_ROW_HEIGHT`) — её не меняем,
+ * а мелким контролам растим зону нажатия через ::after.
+ */
+
+[data-dockkit-split-button],[data-sidebar-right-mode],[class*="_addTab_"]{display:none!important}
+
+/* Классы правой панели статические (`_tabHostHeader_<hash>_<line>`), поэтому
+ * окончание имени тут не работает — ищем вхождение. */
+[class*="_tabHostHeader_"]{padding-top:env(safe-area-inset-top)!important;box-sizing:border-box!important}
+
+/* В настройках правая панель — dockkit-вкладка с собственной полосой
+ * `_tabStrip_<hash>_<line>`; её кнопка закрытия лежала на y=10, в зоне системной
+ * строки. Полоса получает безопасную зону, как и заголовок вкладок. */
+[class*="_tabStrip_"]{min-height:calc(2.75rem + env(safe-area-inset-top))!important;align-items:center!important;padding-top:env(safe-area-inset-top)!important;box-sizing:border-box!important}
+
+[data-sidebar-right-toggle]{width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+
+[data-dockkit-tab]{min-height:2.75rem!important}
+
+[data-dockkit-tab-close]{width:2.75rem!important;height:2.75rem!important;opacity:1!important}
+
+[data-files-entry] button{min-height:2.75rem!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]){min-height:2.75rem!important;height:auto!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) input{height:2.75rem!important;font-size:1rem!important;box-sizing:border-box!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) select, [data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) :is([class$="_tool"], [class*="_tool "]){min-height:2.75rem!important;font-size:1rem!important}
+
+/* Терминал: кнопки строки статуса и нижняя безопасная зона. */
+[data-sidebar-terminal] :is([class$="_status"], [class*="_status "]) button{min-height:2.75rem!important}
+
+[data-sidebar-terminal]{padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+
+/* Скрытая настольная кнопка угла убрала единственный видимый вход в правую
+ * панель; после закрытия последней вкладки гид «Начало» было не вернуть без
+ * карточки в чате. Возвращаем только эту кнопку, остальные настольные действия
+ * в углу остаются скрытыми (см. `:is([class$="_headerCorner"], [class*="_headerCorner "])` выше).
+ */
+[class*="headerCorner"]:has([data-sidebar-right-expand]){display:flex!important;align-items:center!important}
+[class*="headerCorner"] button:not([data-sidebar-right-expand]){display:none!important}
+
+[data-sidebar-right-expand]{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important}
+
+[class*="headerUtilities"] button{width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important}
+
+[data-sidebar-right-panel] button[class*="_typeFilterButton"]{position:relative!important}
+
+[data-sidebar-right-panel] button[class*="_typeFilterButton"]::after, [data-sidebar-right-panel] button[class*="_disclosure"]::after{content:''!important;position:absolute!important;inset:-.85rem!important}
+
+/* ── 9. ПАНЕЛЬ REMOTE И СЛУЖЕБНЫЕ СТРОКИ ─────────────────────────────────────────
+ * Панель — наш клиентский плагин (`plugin/lib/client.js`), он рисует её
+ * встроенными стилями и общий с настольным приложением. На телефоне её ссылка
+ * «Открыть страницу подключения» — 15 px высотой, а строка «Дополнительно» и того
+ * меньше: палец по ним не попадает. Слой телефона правит только телефон.
+ * Строка «Продолжить в «…»» заменяет inline-стили в JS и держится над композером.
+ */
+
+#dshm-remote-panel summary{display:flex!important;align-items:center!important;min-height:2.75rem!important}
+
+#dshm-remote-panel a, #dshm-remote-panel button{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:2.75rem!important}
+
+/* Строка «Продолжить в «…»» вместо inline-стилей в JS. */
+.dshm-resume{position:fixed;z-index:45;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8.5rem);padding:.5rem .875rem;border-radius:999px;border:1px solid var(--dshm-line,rgba(255,255,255,.14));background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff);font:inherit;font-size:.8125rem;cursor:pointer}
+
+/* ── 10. ПЕРЕОПРЕДЕЛЕНИЯ: ЛАНДШАФТ С ОТКРЫТОЙ КЛАВИАТУРОЙ ────────────────────────
+ * Замер: экран 800 × 360, клавиатура занимает 295 px — WebView остаётся 65 px.
+ * Композер с панелью инструментов и строкой статистики (160 px) уезжал за верхний
+ * край (y = −98), а заголовок диалога перекрывал поле ввода (elementFromPoint в
+ * центре редактора давал titleRow). Оставляем только строку ввода и отправку,
+ * заголовок и плавающее меню в этом состоянии убираем. Блок стоит последним: в
+ * коротком окне его правила должны уступать только более специфичным.
+ */
+
+@media (max-height:150px) and (orientation:landscape){
+
+  [class*="_composerStack"] :is([class$="_tools"], [class*="_tools "]), :is([data-composer-dock="true"], [data-dshm-composer-dock]){display:none!important}
+
+  [class*="_composerStack"] :is([class$="_trailing"], [class*="_trailing "]){position:absolute!important;right:.375rem!important;bottom:.125rem!important;width:auto!important}
+
+  [class*="_composerStack"] :is([class$="_trailing"], [class*="_trailing "]) > :not(:last-child){display:none!important}
+
+  [class*="_composerStack"] :is([class$="_scroll"], [class*="_scroll "]){padding-right:3.5rem!important}
+
+  /* У шапки чата бывает второй класс (headerSessionless), поэтому суффикс не
+     * работает — берём вхождение. Второй селектор повторяет более специфичное
+     * правило шапки из основного слоя: в коротком окне оно должно уступить. */
+  header[class*="_header"], header[class*="_header"]:has([data-conversation-header-leading]){display:none!important}
+
+  .dshm-menu{display:none!important}
+
+}
+
+/* Первый запуск: короткий брифинг, как пользоваться приложением и панелью. */
+.dshm-onboard{
+  position:fixed; inset:0; z-index:1300; display:flex; align-items:center; justify-content:center;
+  padding:1.25rem; box-sizing:border-box;
+  background:rgba(0,0,0,.62); backdrop-filter:blur(2px);
+  opacity:0; transition:opacity .22s ease;
+}
+.dshm-onboard[data-dshm-show="1"]{opacity:1}
+.dshm-onboard-card{
+  width:100%; max-width:21rem; box-sizing:border-box;
+  display:flex; flex-direction:column; gap:.75rem;
+  padding:1.25rem; border-radius:1.125rem;
+  border:1px solid var(--dshm-line,rgba(255,255,255,.16));
+  background:var(--dshm-surface,#16181c); color:var(--dshm-ink,#fff);
+  box-shadow:0 1.5rem 4rem rgba(0,0,0,.55);
+  transform:translateY(.75rem) scale(.98); transition:transform .22s cubic-bezier(.16,1,.3,1);
+}
+.dshm-onboard[data-dshm-show="1"] .dshm-onboard-card{transform:none}
+.dshm-onboard-icon{font-size:1.75rem; line-height:1}
+.dshm-onboard-title{font-size:1.125rem; font-weight:600; line-height:1.25}
+.dshm-onboard-text{font-size:.875rem; line-height:1.45; opacity:.82; margin:0}
+.dshm-onboard-foot{display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:.25rem}
+.dshm-onboard-dots{display:flex; gap:.3rem}
+.dshm-onboard-dot{width:.4rem; height:.4rem; border-radius:999px; background:rgba(255,255,255,.22)}
+.dshm-onboard-dot[data-dshm-active="1"]{background:var(--dshm-accent,#6b8afd)}
+.dshm-onboard-actions{display:flex; gap:.5rem}
+.dshm-onboard-skip,.dshm-onboard-next{
+  min-height:2.75rem; padding:0 .875rem; border-radius:.75rem; font:inherit; font-size:.875rem; cursor:pointer;
+}
+.dshm-onboard-skip{border:0;background:transparent;color:var(--dshm-muted,rgba(255,255,255,.7))}
+.dshm-onboard-next{border:0;background:var(--dshm-accent,#6b8afd);color:#fff;font-weight:600}
+.dshm-grid-info{
+  width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;
+  border:0;border-radius:.75rem;background:transparent;color:var(--dshm-ink,#fff);
+  font:inherit;font-size:1rem;cursor:pointer;
+}
+
+/* Уважение к системной настройке «уменьшить движение». */
+@media (prefers-reduced-motion: reduce){
+  .dshm-tool,.dshm-grid-cell,.dshm-sheet-close,.dshm-menu,.dshm-collapse,
+  .dshm-grid,.dshm-grid-scrim,.dshm-dock-hint,.dshm-tip{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+
+/* Планшет/ландшафт: та же мобильная панель, но с комфортной шириной.
+ * Телефонные правила не меняются; на широком экране ящик не занимает половину
+ * дисплея, сетка инструментов не растягивается на всю ширину, а брифинг не
+ * выглядит узкой телефонной карточкой. */
+@media (min-width: 680px){
+  :is([class$="_sidebarCol"], [class*="_sidebarCol "]){width:min(21rem,42vw)!important}
+  .dshm-grid{max-width:42rem;margin-inline:auto}
+  .dshm-grid-cells{grid-template-columns:repeat(auto-fill,minmax(6.25rem,1fr))}
+  .dshm-onboard-card{max-width:24rem}
+}
+
+/* Правая панель на телефоне не должна делить экран на две колонки.
+ *
+ * Dockkit рисует вкладки панели как grid из нескольких `_tabCell_`, и при двух
+ * открытых вкладках (например, «Начало» и разговор субагента) на телефоне
+ * получались две колонки по 180 px: чат сжимался в вертикальную полоску.
+ * На узком экране оставляем только активную вкладку на всю ширину.
+ */
+@media (max-width: 600px){
+  [data-sidebar-right-panel] [class*="_tabLayout_"]{grid-template-columns:1fr!important}
+  [data-sidebar-right-panel] [class*="_tabCell_"]{display:none!important}
+  [data-sidebar-right-panel] [class*="_tabCell_"]:has([data-dockkit-pane-active="true"]){display:block!important;width:100%!important}
+}
+
+
+/* «Открыть в Finder» и меню способов открытия — настольные действия в шапке.
+ * На телефоне они не нужны и занимали место справа от названия сессии; у
+ * пользователя это выглядело как лишняя кнопка «Fider Terminal». Прячем весь
+ * блок утилит; вход в правую панель живёт в headerCorner и остаётся. */
+:is([class$="_headerUtilities"], [class*="_headerUtilities "]){display:none!important}

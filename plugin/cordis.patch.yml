@@ -1,0 +1,22 @@
+# Слой патча DDeck.
+#
+# Без вставок directory-picker-browse пропадает `ctx.directoryPicker`: вслед за ним не
+# стартует `dsh-api-workspace-controller`, и ломается список рабочих областей/сессий на
+# всех страницах (host и клиент). Эти две вставки — единственное, что нам нужно из
+# чужого bundle, помимо поведения карточки вопроса (перенесено в наш мобильный слой).
+- id: directory-picker
+  name: '@deepseek-ai/dsh-host-directory-picker-auto'
+  disabled: true
+
+- insert:
+    - id: directory-picker-mobile-host
+      name: '@deepseek-ai/dsh-host-directory-picker-browse'
+      # Windows DSH Desktop supplies its own browse pair after user patches.
+      disabled: !!js process.platform === 'win32' && (ctx.get('desktopRuntime')?.platform === 'win32' || ctx.get('desktopProfiles') !== undefined)
+
+    - id: directory-picker-mobile-surface
+      name: '@deepseek-ai/dsh-client-ui-directory-picker-browse'
+      disabled: !!js process.platform === 'win32' && (ctx.get('desktopRuntime')?.platform === 'win32' || ctx.get('desktopProfiles') !== undefined)
+
+    - id: dsh-remote
+      name: dsh-remote
