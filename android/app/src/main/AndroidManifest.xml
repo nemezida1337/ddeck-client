@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Оболочка говорит с одним компьютером по HTTPS (или по простому HTTP на loopback
+  и в локальной сети во время сопряжения), хранит учётные данные устройства на
+  телефоне и позже показывает уведомления.
+
+  Открытый HTTP выключен: LAN-режим плагина работает по TLS с собственным
+  приватным CA, а самоподписанный сертификат принимается только когда совпадает с
+  закреплённым (см. SessionActivity), и проверка никогда не отключается целиком.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Связь с компьютером. -->
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+
+  <!-- Уведомления о задачах и постоянное уведомление службы переднего плана;
+       на Android 13+ разрешение запрашивается во время работы. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <!-- Сканирование QR-кода сопряжения: камерой пользуется библиотека ZXing. -->
+  <uses-permission android:name="android.permission.CAMERA" />
+
+  <!-- Процесс не замораживается, пока идёт ход и экран выключен, поэтому страница
+       успевает показать уведомление. См. SessionKeepAliveService. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+  <!-- Камера не обязательна: сопряжение возможно и по ссылке-приглашению, поэтому
+       приложение не должно отсекаться в Play на устройствах без камеры. -->
+  <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+  <application
+    android:enableOnBackInvokedCallback="true"
+    android:allowBackup="false"
+    android:fullBackupContent="false"
+    android:dataExtractionRules="@xml/data_extraction_rules"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher_round"
+    android:label="@string/app_name"
+    android:supportsRtl="true"
+    android:theme="@style/DshMobileTheme"
+    android:networkSecurityConfig="@xml/network_security_config"
+    android:usesCleartextTraffic="false">
+
+    <!-- Единственная точка входа: экран выбора компьютера и сопряжения. -->
+    <activity
+      android:name=".ConnectActivity"
+      android:exported="true"
+      android:windowSoftInputMode="adjustResize">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+    <!-- Сессия — WebView с мобильным интерфейсом компьютера. За пределы
+         приложения не выходит: открывается только из ConnectActivity.
+         configChanges: поворот, смена размера окна (в том числе на складных
+         устройствах и в многооконном режиме), тёмная тема и плотность экрана не
+         должны пересоздавать экран и перезагружать страницу с потерей сессии. -->
+    <activity
+      android:name=".SessionActivity"
+      android:exported="false"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode|density"
+      android:windowSoftInputMode="adjustResize" />
+
+    <!-- Служба переднего плана держит процесс живым, пока сессия свёрнута. -->
+    <service
+      android:name=".SessionKeepAliveService"
+      android:exported="false"
+      android:foregroundServiceType="dataSync" />
+  </application>
+</manifest>

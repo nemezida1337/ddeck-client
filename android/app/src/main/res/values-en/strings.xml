@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English translation of every user-facing string in the shell.
+
+  Russian is the default language (`values/`), so this file must stay complete: a
+  missing entry would silently fall back to Russian on an English phone. Strings
+  marked `translatable="false"` in the default file (the product name and example
+  addresses) are intentionally absent here.
+-->
+<resources>
+
+  <!-- Connection screen. -->
+  <string name="connect_subtitle">Connect to a computer running DeepSeek Harness</string>
+  <string name="connect_help">1. On the computer open DSH → the “DDeck” panel.\n2. Turn on Tailscale on both Mac and phone (same tailnet).\n3. Tap “New code” and scan the QR. The code lives for five minutes.</string>
+  <string name="connect_origin_label">Computer address</string>
+  <string name="connect_key_label">Pairing key</string>
+  <string name="connect_key_hint">one-time key from the “DDeck” panel</string>
+  <string name="connect_scan_qr">Scan the QR code from the computer</string>
+  <string name="session_loading">Opening session…</string>
+  <string name="connect_help_button">How to connect?</string>
+  <string name="connect_lead">Open the DDeck panel on the computer and tap “New code”.</string>
+  <string name="connect_manual_open">Enter address and code manually</string>
+  <string name="connect_manual_title">Manual connection</string>
+  <string name="connect_manual_close">Hide manual entry</string>
+  <string name="connect_help_steps">1. On the computer open DSH → the “DDeck” panel.\n2. Turn on Tailscale or your own server (see docs/RELAY).\n3. Tap “New code” and scan the QR.\n\nThe code lives for five minutes. An old QR will not work — get a fresh one.</string>
+  <string name="connect_help_troubleshoot">If the error mentions a fingerprint: tap “Forget” on the old computer and pair again with a fresh QR.\nOn timeout, check that the Mac is awake, DSH is running and Tailscale/your server is reachable.</string>
+  <string name="connect_help_docs">Full guide</string>
+  <string name="connect_help_close">Got it</string>
+  <string name="connect_open">Open</string>
+  <string name="connect_saved_empty_short">No saved computers yet.</string>
+  <string name="diagnostics_title">Diagnostics</string>
+  <string name="diagnostics_copy">Copy</string>
+  <string name="diagnostics_copied">Diagnostics copied</string>
+  <string name="privacy_link">Privacy policy</string>
+  <string name="diagnostics_hint">Long-press the version for a bug-report diagnostic. Never share QR/codes/tokens.</string>
+  <string name="connect_pair">Pair and connect</string>
+  <string name="connect_saved_label">Paired computers</string>
+  <string name="connect_saved_empty">None yet. Pair your first computer — it will appear here.</string>
+  <string name="connect_forget">Forget</string>
+  <string name="connect_qr_prompt">Point the camera at the QR code in the “DDeck” panel</string>
+  <string name="connect_need_origin_or_link">An address with a key or an invite link is required</string>
+  <string name="connect_pairing">Pairing…</string>
+  <string name="connect_paired">Paired: %1$s</string>
+  <string name="connect_reconnecting">Reconnecting to %1$s…</string>
+  <string name="connect_failed">Could not connect: %1$s.</string>
+  <string name="connect_failed_repair">Could not connect: %1$s. If the computer revoked this device, pair again.</string>
+
+  <!-- Pairing and connection errors. -->
+  <string name="connect_error_identity">this invite is stale or belongs to another computer: open the DDeck panel → “New code” and scan the fresh QR</string>
+  <string name="connect_error_key_rejected">the computer rejected the key (%1$d); the key is one-time and lives for five minutes</string>
+  <string name="connect_error_no_mobile_access">there is no mobile access at this address (404)</string>
+  <string name="connect_error_device_limit">the computer has reached its paired-device limit; open “DDeck” and remove the extra devices</string>
+  <string name="connect_error_too_many_attempts">the computer asks you to wait: too many attempts (429)</string>
+  <string name="connect_error_unavailable">the computer could not answer (%1$d); check that DSH is running</string>
+  <string name="connect_error_status">the computer answered %1$d</string>
+  <string name="connect_error_certificate">the computer’s certificate does not match the pinned one: it may have been reissued. Forget this computer and pair again with a fresh QR</string>
+  <string name="connect_error_host_not_found">address not found: check the computer name</string>
+  <string name="connect_error_timeout">the computer did not answer in time: it is off or unreachable at this address</string>
+  <string name="connect_error_refused">could not connect to the computer: check that it is on and reachable at this address</string>
+  <string name="connect_error_network">network unavailable: check the phone’s connection</string>
+
+  <!-- Session screen: file picking and downloads. -->
+  <string name="session_file_chooser_title">Choose a file</string>
+  <string name="session_download_failed">Could not download the file: %1$s</string>
+  <string name="session_download_unknown_error">unknown error</string>
+  <string name="download_saved_title">File saved</string>
+
+  <!-- Notification channels. -->
+  <string name="channel_files_name">Files from DSH</string>
+  <string name="channel_files_description">Saved files and session exports</string>
+  <string name="channel_session_name">Active session</string>
+  <string name="channel_session_description">While the session is open, the app keeps the connection to the computer</string>
+  <string name="channel_tasks_name">DSH tasks</string>
+  <string name="channel_tasks_description">Task completion and input requests</string>
+
+  <!-- Ongoing foreground-service notification. -->
+  <string name="service_session_text">Session open — waiting for the task to finish</string>
+
+  <!-- Task notifications: the computer sends these sentences in English. -->
+  <string name="notification_task_finished">Task finished</string>
+  <string name="notification_task_finished_dsh">Your DSH task finished</string>
+  <string name="notification_input_needed">Input needed</string>
+  <string name="notification_choice_needed">DSH waits for your choice</string>
+
+  <!-- Bridge errors the page may show to the person. -->
+  <string name="bridge_error_notifications_disabled">notifications are disabled for this app</string>
+  <string name="bridge_error_unsupported">this build does not implement %1$s</string>
+</resources>
