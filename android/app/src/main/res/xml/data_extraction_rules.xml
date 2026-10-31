@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Правила извлечения данных для Android 12+: allowBackup=false отключает
+  резервное копирование, но на новых версиях система читает именно этот файл,
+  поэтому исключения заданы явно.
+
+  Копировать нечего и нельзя: единственные данные приложения — device-токен и
+  закреплённый сертификат сопряжённых компьютеров. Токен даёт полный контроль над
+  компьютером с DSH, а ключ Keystore, которым он зашифрован, на другое устройство
+  не переносится — восстановленная копия была бы бесполезна и опасна. Поэтому
+  исключены все домены: ни облачная копия, ни перенос на другое устройство не
+  забирают ни байта.
+-->
+<data-extraction-rules>
+  <cloud-backup>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+  </device-transfer>
+</data-extraction-rules>
