@@ -1,0 +1,73 @@
+name: Bug report
+description: Сообщить о проблеме в DDeck
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за отчёт! Не прикладывайте QR-коды, коды сопряжения, токены и приватные скриншоты.
+  - type: input
+    id: app
+    attributes:
+      label: Версия DDeck
+      description: Из GitHub Release или экрана подключения
+      placeholder: 0.9.1-beta
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Как подключён телефон
+      options:
+        - Tailscale
+        - Свой VPS / DDeck Relay
+        - LAN/вручную
+        - Не подключается
+    validations:
+      required: true
+  - type: input
+    id: network
+    attributes:
+      label: Сеть и VPN
+      description: Wi-Fi/4G, включён ли обычный VPN, Tailscale
+      placeholder: Wi-Fi, обычный VPN, Tailscale выключен
+  - type: input
+    id: dsh
+    attributes:
+      label: Версия DeepSeek Harness
+      placeholder: 0.2.1-rc.5
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android и устройство
+      placeholder: Android 15, Pixel 8
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: 1. ... 2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи/скриншот (без секретов)
+      description: Текст ошибки, шаги, лог DSH. Не прикладывайте QR, коды и токены.
+      render: text

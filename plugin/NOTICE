@@ -1,0 +1,40 @@
+DDeck plugin
+Copyright 2026 DDeck contributors
+
+The DDeck plugin (plugin/) is licensed under the Apache License, Version 2.0.
+The full licence text is in plugin/LICENSE.
+
+==============================================================================
+Vendored software: dsh-mobile transport gateway
+==============================================================================
+
+This product includes software from the dsh-mobile project
+(https://github.com/saya-ch/dsh-mobile), version 0.6.12, commit
+0efceeb9c5698e854e9d1e227a93bf393e69effa, licensed under the Apache License,
+Version 2.0 (the same licence text is kept in plugin/LICENSE).
+
+Vendored sources: plugin/vendor/gateway/ (transport modules and the stub
+boundaries), with the build entry plugin/vendor/entry.js and stubs in
+plugin/vendor/_stubs.js.
+Built artifact: plugin/lib/gateway-bundle.js.
+Local modifications are recorded file by file in
+plugin/vendor/gateway/VENDORED.md (this record is the "changes" notice required
+by Apache-2.0 section 4(b)); attribution to the original authors is kept there.
+Files copied without modification: private-file.ts, exec-file.ts, ip.ts,
+network.ts, local-admin-host.ts, browser-auth-cookies.ts, auth-pages.ts,
+auth-failure-log.ts and http-cache.ts; config.ts, gateway.ts, access.ts,
+storage.ts, version.ts and http-security.ts carry our changes.
+
+==============================================================================
+Bundled third-party code
+==============================================================================
+
+- qrcode 1.5.4 - MIT - pairing QR code, bundled in lib/qr-bundle.js and the
+  gateway bundle.
+- node-forge 1.4.0 - BSD-3-Clause (used under this option) - TLS certificate
+  generation, bundled in lib/node-forge-bundle.js.
+
+Full license texts: plugin/THIRD-PARTY-LICENSES.md.
+
+The Android application bundles its own third-party libraries; their notices
+are part of the Android build metadata, not of this plugin package.
