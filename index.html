@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDeck — DeepSeek Harness с телефона</title>
+  <meta name="description" content="DDeck — Android-пульт к DeepSeek Harness: чат, инструменты, терминал и несколько компьютеров.">
+  <style>
+    :root { color-scheme: dark; --bg:#101114; --card:#1a1c21; --line:#2c303a; --ink:#f2f4f8; --muted:#a7adba; --accent:#7894ff; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    main { max-width:980px; margin:0 auto; padding:56px 22px 80px; }
+    .brand { display:flex; align-items:center; gap:14px; margin-bottom:28px; }
+    .brand img { width:170px; height:auto; }
+    h1 { font-size:clamp(34px,6vw,58px); line-height:1.05; margin:0 0 16px; letter-spacing:-.03em; }
+    h2 { font-size:24px; margin:44px 0 14px; }
+    .lead { font-size:19px; color:var(--muted); max-width:720px; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin:28px 0; }
+    a.button { display:inline-block; padding:13px 20px; border-radius:12px; background:var(--accent); color:#0e1220; font-weight:700; text-decoration:none; }
+    a.secondary { background:var(--card); color:var(--ink); border:1px solid var(--line); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; }
+    .card h3 { margin:0 0 8px; font-size:17px; }
+    .card p { margin:0; color:var(--muted); font-size:14px; }
+    code, pre { background:#0b0c0f; border:1px solid var(--line); border-radius:8px; }
+    code { padding:2px 6px; font-size:.9em; }
+    pre { padding:14px; overflow:auto; }
+    .muted { color:var(--muted); font-size:14px; }
+    .shots { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:16px; }
+    .shots img { width:100%; border-radius:16px; border:1px solid var(--line); }
+    footer { margin-top:56px; border-top:1px solid var(--line); padding-top:20px; color:var(--muted); font-size:14px; }
+    a { color:#a9bcff; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="docs/logo.svg" alt="DDeck"></div>
+  <h1>DeepSeek Harness — с телефона.</h1>
+  <p class="lead">DDeck — Android-пульт к вашему компьютеру с DeepSeek Harness: чат, инструменты, очередь, файлы, терминал и несколько компьютеров. Без облака DDeck.</p>
+  <div class="actions">
+    <a class="button" href="https://github.com/nemezida1337/ddeck-client/releases/download/v0.9.7-beta/DDeck-0.9.7-beta.apk">Скачать APK 0.9.7-beta</a>
+    <a class="button secondary" href="https://github.com/nemezida1337/ddeck-client/releases">Все релизы</a>
+    <a class="button secondary" href="https://github.com/nemezida1337/ddeck-client">GitHub</a>
+  </div>
+  <p class="muted">Android 10+. Бета: не финальный релиз. Контрольная сумма — в release notes.</p>
+
+  <h2>Установка плагина</h2>
+  <p>После публикации пакета в npm:</p>
+  <pre><code>dsh plugin --profile web add ddeck-remote</code></pre>
+  <p class="muted">Или установите из маркета DSH, добавив индекс:</p>
+  <pre><code>https://nemezida1337.github.io/ddeck-client/index.json</code></pre>
+
+  <h2>Что умеет</h2>
+  <div class="grid">
+    <div class="card"><h3>Чат и инструменты</h3><p>Полноценный DSH на телефоне: стриминг, инструменты, субагенты, очередь, файлы и терминал.</p></div>
+    <div class="card"><h3>Своя нижняя панель</h3><p>Инструменты под большим пальцем: свайп, сетка «Все инструменты», сворачивание и настройка плиток.</p></div>
+    <div class="card"><h3>Своё боковое меню</h3><p>Рабочие области, сессии, поиск, аккаунт и настройки с крупными целями.</p></div>
+    <div class="card"><h3>Несколько компьютеров</h3><p>Телефон хранит несколько сопряжённых компьютеров и переключается между ними без разрыва сессии.</p></div>
+    <div class="card"><h3>Телефон через телефон</h3><p>Первый телефон показывает QR и одноразовый код для второго.</p></div>
+    <div class="card"><h3>Приватность</h3><p>TLS с закреплённым сертификатом, данные только на вашем компьютере. Без облака DDeck.</p></div>
+  </div>
+
+  <h2>Как это выглядит</h2>
+  <div class="shots">
+    <img src="docs/screenshots/demo/sidebar.png" alt="Боковое меню DDeck">
+    <img src="docs/screenshots/demo/more-menu.png" alt="Меню DDeck">
+    <img src="docs/screenshots/demo/new-session-tools.png" alt="Панель инструментов DDeck">
+    <img src="docs/screenshots/demo/test-session-tools.png" alt="Тестовая сессия DDeck">
+  </div>
+
+  <footer>
+    DDeck не связан с DeepSeek. DeepSeek Harness — открытый проект DeepSeek.
+    <a href="https://github.com/nemezida1337/ddeck-client/blob/main/docs/PRIVACY.md">Приватность</a> ·
+    <a href="https://github.com/nemezida1337/ddeck-client/blob/main/LICENSE">Apache-2.0</a>
+  </footer>
+</main>
+</body>
+</html>
