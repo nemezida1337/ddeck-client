@@ -1,0 +1,148 @@
+{
+  "plugin": "dsh-remote",
+  "recorded": "2026-10-18",
+  "steps": [
+    {
+      "name": "discovery",
+      "request": {
+        "method": "GET",
+        "path": "/mobile-access/discovery"
+      },
+      "status": 200,
+      "response": {
+        "deviceName": "string",
+        "instanceId": "string:hex64",
+        "origin": "string",
+        "port": "number:int",
+        "protocol": "number:int"
+      }
+    },
+    {
+      "name": "metadata",
+      "request": {
+        "method": "GET",
+        "path": "/mobile-access/metadata"
+      },
+      "status": 200,
+      "response": {
+        "discoveryProtocol": "number:int",
+        "minimumAndroidAppVersion": "string",
+        "pluginVersion": "string",
+        "version": "number:int"
+      }
+    },
+    {
+      "name": "pair",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-pair"
+      },
+      "status": 201,
+      "response": {
+        "csrfToken": "string",
+        "deviceExpiresAt": "number:int",
+        "deviceId": "string:hex32",
+        "deviceToken": "string",
+        "instanceId": "string:hex64",
+        "sessionExpiresAt": "number:int",
+        "sessionToken": "string"
+      }
+    },
+    {
+      "name": "call-authenticated",
+      "request": {
+        "method": "GET",
+        "path": "/some/harness/path"
+      },
+      "status": 200,
+      "response": {
+        "fromUpstream": "boolean",
+        "ok": "boolean"
+      }
+    },
+    {
+      "name": "probe",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-probe"
+      },
+      "status": 200,
+      "response": {
+        "deviceExpiresAt": "number:int",
+        "deviceId": "string:hex32",
+        "instanceId": "string:hex64"
+      }
+    },
+    {
+      "name": "renew",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-renew"
+      },
+      "status": 200,
+      "response": {
+        "csrfToken": "string",
+        "deviceId": "string:hex32",
+        "instanceId": "string:hex64",
+        "sessionExpiresAt": "number:int",
+        "sessionToken": "string"
+      }
+    },
+    {
+      "name": "call-after-renew",
+      "request": {
+        "method": "GET",
+        "path": "/some/harness/path"
+      },
+      "status": 200,
+      "response": {
+        "fromUpstream": "boolean",
+        "ok": "boolean"
+      }
+    },
+    {
+      "name": "reject-mutation-without-origin",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-pair"
+      },
+      "status": 403,
+      "response": {
+        "error": "string"
+      }
+    },
+    {
+      "name": "reject-foreign-authority",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-pair"
+      },
+      "status": 403,
+      "response": {
+        "error": "string"
+      }
+    },
+    {
+      "name": "reject-call-without-session",
+      "request": {
+        "method": "GET",
+        "path": "/some/harness/path"
+      },
+      "status": 401,
+      "response": {
+        "error": "string"
+      }
+    },
+    {
+      "name": "reject-consumed-token",
+      "request": {
+        "method": "POST",
+        "path": "/mobile-access/auth/native-pair"
+      },
+      "status": 401,
+      "response": {
+        "error": "string"
+      }
+    }
+  ]
+}
