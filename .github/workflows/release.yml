@@ -1,0 +1,104 @@
+name: release
+
+# Публикация npm-пакета ddeck-remote по тегу.
+#
+# Используется trusted publishing (OIDC), как в dsh-locale-russian: долгоживущие
+# npm-токены не нужны. В настройках пакета на npmjs.com нужно один раз указать:
+#   Publisher: GitHub Actions
+#   Organization or user: nemezida1337
+#   Repository: ddeck-client
+#   Workflow filename: release.yml
+#   Environment name: (пусто)
+#   Allowed actions: Allow npm publish
+#
+# Первая публикация нового пакета не может быть доверенной: npm требует
+# существующий пакет и настроенного publisher. После первой ручной публикации
+# с OTP этот workflow публикует все следующие теги автоматически.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Собрать и проверить, но не публиковать'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Определить версию
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            node -e '
+              const fs = require("node:fs")
+              const file = "plugin/package.json"
+              const manifest = JSON.parse(fs.readFileSync(file, "utf8"))
+              manifest.version = process.argv[1]
+              fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n")
+            ' "$VERSION"
+          else
+            VERSION=$(node -p "require('./plugin/package.json').version")
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "версия: $VERSION"
+
+      - name: Импорт пакета и dry-run tarball
+        working-directory: plugin
+        shell: bash
+        run: |
+          node --input-type=module -e "import('./lib/index.js').then(() => console.log('plugin import ok'))"
+          npm pack --dry-run
+
+      - name: Проверить, не опубликована ли версия
+        id: published
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if npm view "ddeck-remote@$VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "версия $VERSION уже в реестре — публикация пропускается"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Публикация (trusted publishing)
+        if: ${{ (github.event_name == 'push' || inputs.dry-run == false) && steps.published.outputs.exists != 'true' }}
+        working-directory: plugin
+        run: npm publish --access public --tag latest --provenance
+
+      - name: Что ушло бы в реестр (dry-run)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+        working-directory: plugin
+        run: npm pack --dry-run
+
+      - name: Подсказка при отказе публикации
+        if: failure()
+        shell: bash
+        run: |
+          cat <<'HINT'
+          Если публикация упала с ENEEDAUTH — npm не увидел trusted publisher.
+          На npmjs.com: пакет ddeck-remote → Settings → Publishing access →
+          Trusted publishing → GitHub Actions:
+            Organization or user: nemezida1337
+            Repository: ddeck-client
+            Workflow filename: release.yml
+            Environment name: пусто
+            Allowed actions: Allow npm publish
+          Связь с неверными полями нельзя исправить — удалите и создайте заново.
+          HINT
