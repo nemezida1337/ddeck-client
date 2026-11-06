@@ -1,0 +1,30 @@
+# Runtime state and local secrets.
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+keystore.properties
+local.properties
+.run/
+backups/
+*.bak
+*.orig
+*.rej
+*.hprof
+
+# Build outputs and IDE noise.
+build/
+.gradle/
+.kotlin/
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+node_modules/
+android/app/build/
+android/build/
