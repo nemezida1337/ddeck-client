@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DDeck — DeepSeek Harness с телефона</title>
+<meta name="description" content="DDeck — Android-пульт к DeepSeek Harness. Все ваши компьютеры в одном телефоне: чат, инструменты, файлы и терминал.">
+<meta name="theme-color" content="#090a0b">
+<link rel="canonical" href="https://nemezida1337.github.io/ddeck-client/">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DDeck — DeepSeek Harness с телефона">
+<meta property="og:description" content="Все ваши компьютеры в одном телефоне. Android-пульт к DeepSeek Harness.">
+<meta property="og:url" content="https://nemezida1337.github.io/ddeck-client/">
+<meta property="og:image" content="https://nemezida1337.github.io/ddeck-client/docs/social/card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DDeck — DeepSeek Harness с телефона">
+<meta property="og:site_name" content="DDeck">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://nemezida1337.github.io/ddeck-client/docs/social/card.png">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #090a0b;
+    --panel: #0e1012;
+    --panel-2: #121417;
+    --line: #202329;
+    --line-soft: #171a1e;
+    --ink: #f2f3f5;
+    --muted: #9ba0aa;
+    --muted-2: #6f747e;
+    --accent: #dce3ff;
+    --green: #8ee6b0;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  img { display: block; max-width: 100%; height: auto; }
+  code, pre, kbd { font-family: var(--mono); }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: .88em; }
+  pre { margin: 0; }
+  .wrap { width: min(1160px, calc(100% - 44px)); margin: 0 auto; }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--ink); color: var(--bg); padding: 10px 14px; z-index: 100; }
+  .skip:focus { left: 12px; top: 12px; }
+
+  /* header */
+  header { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line-soft); }
+  .nav { display: flex; align-items: center; gap: 24px; min-height: 66px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 600; font-size: 16px; letter-spacing: -.02em; }
+  .brand:hover { text-decoration: none; }
+  .brand img { width: 26px; height: 26px; }
+  .nav-links { display: flex; align-items: center; gap: 22px; margin-left: auto; }
+  .nav-links a { color: var(--muted); font-size: 13px; }
+  .nav-links a:hover { color: var(--ink); text-decoration: none; }
+  .nav-cta { color: var(--bg) !important; background: var(--ink); padding: 8px 13px; border-radius: 7px; font-weight: 600; font-size: 12.5px; }
+  .nav-cta:hover { filter: brightness(.9); text-decoration: none !important; }
+  .nav-toggle { display: none; margin-left: auto; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 7px; min-width: 40px; min-height: 40px; font-size: 17px; }
+
+  /* hero */
+  .hero { padding: 88px 0 72px; border-bottom: 1px solid var(--line-soft); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr); gap: 56px; align-items: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font: 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  h1 { margin: 18px 0 20px; font-size: clamp(48px, 7.3vw, 88px); line-height: .96; letter-spacing: -.065em; font-weight: 600; }
+  h1 span { color: var(--muted-2); }
+  .lead { max-width: 560px; margin: 0 0 28px; color: var(--muted); font-size: clamp(16px, 1.8vw, 18.5px); line-height: 1.55; }
+  .actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-bottom: 15px; }
+  .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 16px; border: 1px solid transparent; border-radius: 8px; font: 500 13.5px/1 var(--sans); color: var(--bg); background: var(--ink); cursor: pointer; }
+  .button:hover { filter: brightness(.9); text-decoration: none; }
+  .button.outline { color: var(--ink); background: transparent; border-color: var(--line); }
+  .button.outline:hover { border-color: #3a3e46; filter: none; }
+  .button.quiet { color: var(--muted); background: transparent; border-color: transparent; padding-inline: 4px; }
+  .button.quiet:hover { color: var(--ink); }
+  .meta { color: var(--muted-2); font: 11.5px/1.5 var(--mono); }
+  .meta a { color: var(--muted); }
+  .hero-art { display: flex; justify-content: center; }
+  .phone { position: relative; width: min(320px, 82%); border: 1px solid #2a2e35; border-radius: 26px; padding: 7px; background: #050607; box-shadow: 0 34px 90px rgba(0,0,0,.55); }
+  .phone img { border-radius: 20px; }
+  .phone::after { content: "Android · DDeck"; position: absolute; left: 16px; bottom: 16px; padding: 5px 7px; border: 1px solid rgba(255,255,255,.16); border-radius: 5px; background: rgba(5,6,7,.8); color: var(--muted); font: 9.5px/1 var(--mono); letter-spacing: .04em; }
+  @media (max-width: 840px) {
+    .hero { padding: 56px 0 50px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 36px; }
+    .hero-art { order: 2; }
+    .phone { width: min(250px, 68%); }
+  }
+
+  /* command panel */
+  .install-strip { margin: -1px auto 0; padding: 0 0 64px; }
+  .terminal { margin-top: 34px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); overflow: hidden; }
+  .terminal-head { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border-bottom: 1px solid var(--line); color: var(--muted-2); font: 11px/1 var(--mono); }
+  .traffic { display: flex; gap: 5px; margin-right: 7px; }
+  .traffic i { width: 7px; height: 7px; border-radius: 50%; background: #343840; display: block; }
+  .terminal-body { padding: 17px 16px 15px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 3px; border-bottom: 1px solid var(--line); margin: -2px 0 14px; }
+  .tab { border: 0; border-bottom: 1px solid transparent; background: transparent; color: var(--muted-2); font: 11.5px/1 var(--mono); padding: 8px 10px 9px; cursor: pointer; }
+  .tab:hover { color: var(--muted); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .cmd-row { display: flex; gap: 9px; align-items: stretch; }
+  .cmd-row pre { flex: 1; min-width: 0; overflow: auto; color: #d9dde6; font-size: 12.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+  .copy { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 6px; padding: 0 10px; font: 11px/1 var(--mono); cursor: pointer; }
+  .copy:hover { color: var(--ink); border-color: #3a3e46; }
+  .copy.copied { color: var(--green); border-color: var(--green); }
+  .terminal-note { margin: 11px 0 0; color: var(--muted-2); font-size: 12px; }
+  .terminal-note strong { color: var(--muted); font-weight: 500; }
+  @media (max-width: 700px) {
+    .install-strip { padding-bottom: 44px; }
+    .terminal { margin-top: 24px; }
+    .terminal-body { padding: 14px 12px; }
+    .cmd-row { flex-direction: column; }
+    .copy { align-self: flex-end; min-height: 30px; }
+  }
+
+  /* sections */
+  .section { padding: 82px 0; border-bottom: 1px solid var(--line-soft); }
+  .section:last-of-type { border-bottom: 0; }
+  .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; margin-bottom: 34px; }
+  .label { color: var(--muted-2); font: 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  h2 { margin: 9px 0 0; font-size: clamp(29px, 4vw, 46px); line-height: 1.02; letter-spacing: -.045em; font-weight: 550; max-width: 650px; }
+  .section-head p { max-width: 360px; margin: 3px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  @media (max-width: 760px) { .section { padding: 56px 0; } .section-head { display: block; margin-bottom: 25px; } .section-head p { margin-top: 14px; } }
+
+  /* computers */
+  .device-line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+  .device-line article { padding: 23px 22px 23px 0; border-bottom: 1px solid var(--line); }
+  .device-line article + article { padding-left: 22px; border-left: 1px solid var(--line); }
+  .device-line h3 { margin: 0 0 7px; font-size: 14px; font-weight: 500; }
+  .device-line p { margin: 0; max-width: 300px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+  @media (max-width: 760px) { .device-line { grid-template-columns: 1fr; } .device-line article, .device-line article + article { padding: 18px 0; border-left: 0; } }
+  .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; margin-top: 38px; }
+  .shot { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 11px; padding: 6px; background: #050607; cursor: zoom-in; transition: border-color .18s ease, transform .18s ease; }
+  .shot:hover { border-color: var(--muted-2); transform: translateY(-1px); }
+  .shot img { display: block; width: 100%; height: auto; aspect-ratio: 12 / 7; object-fit: cover; border-radius: 7px; }
+  .shot span { display: block; padding: 9px 4px 3px; color: var(--muted-2); font: 10.5px/1.4 var(--mono); text-align: center; }
+  @media (max-width: 700px) { .shots { grid-template-columns: 1fr; } }
+
+  /* phone-to-phone */
+  .phone-pair { display: grid; grid-template-columns: .9fr 1.1fr; gap: 54px; align-items: start; }
+  .phone-pair .shot { max-width: 300px; margin: 0 auto; }
+  .steps { counter-reset: step; border-top: 1px solid var(--line); }
+  .step { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .step::before { counter-increment: step; content: "0" counter(step); color: var(--muted-2); font: 11px/1.7 var(--mono); }
+  .step p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  .step strong { color: var(--ink); font-weight: 500; }
+  .note { margin: 16px 0 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.6; }
+  .note strong { color: var(--muted); font-weight: 500; }
+  @media (max-width: 760px) { .phone-pair { grid-template-columns: 1fr; gap: 28px; } .phone-pair .shot { max-width: 200px; } }
+
+  /* install steps */
+  .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px; }
+  .install-item { padding: 22px 0; border-top: 1px solid var(--line); }
+  .install-item h3 { margin: 0 0 6px; font-size: 14px; font-weight: 500; }
+  .install-item p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 430px; }
+  .install-item .button { min-height: 36px; padding: 8px 12px; font-size: 12.5px; }
+  .install-grid .install-item:nth-child(1) { grid-column: 1; }
+  .install-grid .install-item:nth-child(2) { grid-column: 2; }
+  @media (max-width: 700px) { .install-grid { grid-template-columns: 1fr; } .install-grid .install-item:nth-child(n) { grid-column: auto; } }
+
+  /* roadmap */
+  .roadmap { display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px; }
+  .road { padding: 20px 0; border-top: 1px solid var(--line); }
+  .road .label { display: block; margin-bottom: 7px; }
+  .road h3 { margin: 0 0 5px; font-size: 15px; font-weight: 500; }
+  .road p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 440px; }
+  .roadmap-note { margin: 16px 0 0; color: var(--muted-2); font-size: 12px; }
+  @media (max-width: 700px) { .roadmap { grid-template-columns: 1fr; } }
+
+  /* faq */
+  .faq { max-width: 760px; border-top: 1px solid var(--line); }
+  details { border-bottom: 1px solid var(--line); }
+  details summary { list-style: none; cursor: pointer; padding: 17px 0; color: #dfe2e8; font-size: 14px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; float: right; color: var(--muted-2); font: 15px/1 var(--mono); }
+  details[open] summary::after { content: "−"; }
+  details p { margin: -2px 0 18px; color: var(--muted); font-size: 13.5px; line-height: 1.65; max-width: 640px; }
+
+  footer { padding: 46px 0 54px; }
+  .footer { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 28px; }
+  .footer .brand { font-size: 14px; }
+  .footer-note { margin-top: 11px; color: var(--muted-2); font-size: 12px; line-height: 1.6; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 3px; }
+  .footer-links a { color: var(--muted); font-size: 12px; }
+  .footer-links a:hover { color: var(--ink); }
+
+  /* dialog */
+  dialog#plugin-install { width: min(560px, calc(100% - 28px)); max-height: min(86vh, 720px); overflow: auto; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); color: var(--ink); padding: 0; box-shadow: 0 30px 100px rgba(0,0,0,.6); }
+  dialog::backdrop { background: rgba(0,0,0,.68); backdrop-filter: blur(3px); }
+  .dialog-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+  .dialog-head h3 { flex: 1; margin: 0; font-size: 15px; font-weight: 500; }
+  .dialog-head button { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px; min-width: 34px; min-height: 34px; font-size: 16px; cursor: pointer; }
+  .dialog-body { padding: 17px 18px 18px; }
+  .dialog-body p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .dialog-body ol { margin: 0 0 14px; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .dialog-body li { margin: 7px 0; }
+  .dialog-body strong { color: var(--ink); font-weight: 500; }
+  .dialog-body .cmd-row { border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 11px 12px; margin: 10px 0 12px; }
+  .dialog-body .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+  .dialog-body .dialog-actions .button { flex: 1 1 150px; }
+  .os-links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .os-links a { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: var(--muted); font: 10.5px/1.4 var(--mono); }
+  .os-links a:hover { color: var(--ink); border-color: #3a3e46; text-decoration: none; }
+  .dialog-body .small { color: var(--muted-2); font-size: 11.5px; }
+
+  @media (max-width: 760px) {
+    .nav-links { position: absolute; left: 0; right: 0; top: 66px; display: none; flex-direction: column; align-items: stretch; gap: 0; padding: 8px 22px 15px; border-bottom: 1px solid var(--line); background: var(--bg); }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 11px 0; font-size: 14px; }
+    .nav-toggle { display: block; }
+    .nav-cta { text-align: center; margin-top: 5px; }
+    .hero { padding-top: 45px; }
+    .actions .button { flex: 1 1 auto; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* Screenshots are deliberately clickable: the gallery is a preview, the
+     lightbox is the readable size. */
+  .shot:focus-visible, .phone img.zoomable:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .phone img.zoomable { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 28px; background: rgba(4,5,7,.92); backdrop-filter: blur(10px); }
+  .lightbox[open] { display: flex; }
+  .lightbox-figure { position: relative; max-width: 94vw; max-height: 90vh; margin: 0; }
+  .lightbox img { display: block; max-width: 94vw; max-height: 84vh; width: auto; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #050607; box-shadow: 0 30px 100px rgba(0,0,0,.65); }
+  .lightbox-caption { margin-top: 10px; color: var(--muted); font: 11px/1.4 var(--mono); letter-spacing: .04em; text-align: center; }
+  .lightbox-close { position: fixed; top: 18px; right: 22px; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 999px; background: #0b0d11; color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; }
+  .lightbox-close:hover { background: #171a20; }
+  @media (max-width: 700px) { .lightbox { padding: 12px; } .lightbox img { max-width: 96vw; max-height: 80vh; } }
+
+  /* Tester CTA */
+  .tester-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+  .tester-card { padding: 22px 22px 22px 0; border-right: 1px solid var(--line); }
+  .tester-card:last-child { border-right: 0; padding-right: 0; }
+  .tester-card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 500; }
+  .tester-card p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  .tester-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  .tester-note { margin: 18px 0 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.6; }
+  .tester-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 760px) { .tester-grid { grid-template-columns: 1fr; } .tester-card { border-right: 0; border-bottom: 1px solid var(--line); padding: 18px 0; } .tester-card:last-child { border-bottom: 0; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Перейти к содержимому</a>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href=""><img src="icon.svg" alt="">DDeck</a>
+    <button class="nav-toggle" aria-label="Меню" aria-controls="site-nav" aria-expanded="false" onclick="var n=document.querySelector('.nav-links');var o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">☰</button>
+    <nav class="nav-links" id="site-nav">
+      <a href="#computers">Компьютеры</a>
+      <a href="#phone">Второй телефон</a>
+      <a href="#install">Установка</a>
+      <a href="#testers">Тестеры</a>
+      <a href="#roadmap">Планы</a>
+      <a href="https://github.com/nemezida1337/ddeck-client">GitHub</a>
+      <a class="nav-cta" href="https://github.com/nemezida1337/ddeck-client/releases/download/v0.9.13-beta/DDeck-0.9.13-beta.apk">Скачать APK</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> Android · beta 0.9.13</div>
+        <h1>DeepSeek Harness<br><span>в кармане.</span></h1>
+        <p class="lead">Тот же чат, инструменты и терминал — с телефона. Компьютер дома, Windows на работе, сервер в облаке: DDeck держит их всех в одном месте.</p>
+        <div class="actions">
+          <a class="button" href="https://github.com/nemezida1337/ddeck-client/releases/download/v0.9.13-beta/DDeck-0.9.13-beta.apk">Скачать для Android</a>
+          <a class="button outline" href="https://www.deepseek.com/harness/">Установить DSH</a>
+          <button class="button quiet" type="button" data-open-dialog="plugin-install">Поставить плагин →</button>
+        </div>
+        <div class="meta">Android 10+ · macOS / Windows / Linux · <a href="https://www.npmjs.com/package/ddeck-remote">npm</a> · <a href="https://github.com/nemezida1337/ddeck-client">open source</a></div>
+      </div>
+      <div class="hero-art">
+        <div class="phone"><img class="zoomable" src="docs/screenshots/showcase/hero.png" alt="DDeck на Android: рабочие области и сессии"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap install-strip">
+    <div class="terminal" id="command">
+      <div class="terminal-head"><span class="traffic"><i></i><i></i><i></i></span>~/ddeck — установка плагина</div>
+      <div class="terminal-body">
+        <div class="tabs" role="tablist" aria-label="Способ установки">
+          <button class="tab active" role="tab" aria-selected="true" data-command="desktop">DSH Desktop</button>
+          <button class="tab" role="tab" aria-selected="false" data-command="web">DSH CLI</button>
+          <button class="tab" role="tab" aria-selected="false" data-command="market">Без терминала</button>
+        </div>
+        <div class="cmd-row"><pre><code id="cmd-install">dsh plugin --profile desktop add ddeck-remote</code></pre><button class="copy" data-copy="cmd-install" type="button">Копировать</button></div>
+        <p class="terminal-note" id="cmd-note"><strong>После установки полностью перезапустите DSH</strong> — панель DDeck появляется при старте.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="computers">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="label">Компьютеры</div><h2>Все машины — в одном списке.</h2></div>
+        <p>Подключите Mac, Windows или Linux один раз. Переключайтесь в боковом меню — сессия на другом компьютере останется на месте.</p>
+      </div>
+      <div class="device-line">
+        <article><h3>macOS · Windows · Linux</h3><p>Один плагин и один APK. macOS — основной путь, Windows и Linux — бета.</p></article>
+        <article><h3>Переключение без потери</h3><p>«Ещё → Сменить компьютер»: откройте другой ноутбук или сервер, не закрывая текущую сессию.</p></article>
+        <article><h3>Управление с телефона</h3><p>Инструменты, очередь, файлы, терминал и уведомления — без удалённого рабочего стола.</p></article>
+      </div>
+      <div class="shots">
+        <figure class="shot"><img src="docs/screenshots/showcase/computers.png" alt="Все компьютеры в одном телефоне DDeck" loading="lazy"><span>Все компьютеры · один список</span></figure>
+        <figure class="shot"><img src="docs/screenshots/showcase/terminal.png" alt="Терминал DSH на Android" loading="lazy"><span>Полный терминал · zsh</span></figure>
+        <figure class="shot"><img src="docs/screenshots/showcase/notifications.png" alt="Уведомления DDeck: вопрос агента и завершение задачи" loading="lazy"><span>Уведомления, которые ведут к делу</span></figure>
+        <figure class="shot"><img src="docs/screenshots/showcase/pairing.png" alt="Подключение второго телефона" loading="lazy"><span>Второй телефон</span></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="phone">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="label">Второй телефон</div><h2>Компьютер, до которого не дотянуться.</h2></div>
+        <p>Первый телефон уже знает компьютер. Он выдаёт QR и одноразовый код второму — без доступа к самому компьютеру.</p>
+      </div>
+      <div class="phone-pair">
+        <div class="shot"><img src="docs/screenshots/showcase/pairing.png" alt="Подключить телефон" loading="lazy"><span>«Ещё» → «Подключить телефон»</span></div>
+        <div>
+          <div class="steps">
+            <div class="step"><p><strong>На компьютере</strong> откройте DDeck → «Второй телефон» → задайте пароль (6–64 символа).</p></div>
+            <div class="step"><p><strong>На первом телефоне</strong> выберите «Ещё → Подключить телефон» и введите пароль.</p></div>
+            <div class="step"><p><strong>Второй телефон</strong> сканирует QR и получает свою независимую сессию. Первый можно закрыть.</p></div>
+          </div>
+          <p class="note">Так можно подключить второе устройство, планшет или коллегу — под вашим контролем, с отзывом в панели DDeck.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="testers">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="label">Бета</div><h2>Стать тестером.</h2></div>
+        <p>Сейчас DDeck — открытая бета. Ищу 10–15 человек с Android и компьютером, которым интересен DeepSeek Harness. Помогу поставить DSH, плагин и подключить телефон.</p>
+      </div>
+      <div class="tester-grid">
+        <article class="tester-card"><h3>Что нужно</h3><p>Android 10+, компьютер с macOS/Windows/Linux и 15 минут на установку. Опыт с DSH не обязателен — проведу по шагам.</p></article>
+        <article class="tester-card"><h3>Что проверяем</h3><p>Подключение по QR, чат и очередь, терминал, файлы, уведомления, настройки и второй телефон. Баги и неудобства — в Telegram или заявку.</p></article>
+        <article class="tester-card"><h3>Что дальше</h3><p>После беты — закрытый тест Google Play: 12 человек на 14 дней. Если готов(а) помочь и там — отметь в заявке.</p></article>
+      </div>
+      <div class="tester-actions">
+        <a class="button" href="https://github.com/nemezida1337/ddeck-client/issues/new?template=beta.yml" target="_blank" rel="noopener">Оставить заявку</a>
+        <a class="button outline" href="mailto:mozhanovsasha@gmail.com?subject=%D0%97%D0%B0%D1%8F%D0%B2%D0%BA%D0%B0%20%D0%B2%20%D0%B1%D0%B5%D1%82%D1%83%20DDeck">Написать на email</a>
+        <a class="button quiet" href="https://github.com/nemezida1337/ddeck-client/releases/download/v0.9.13-beta/DDeck-0.9.13-beta.apk">Скачать APK</a>
+      </div>
+      <p class="tester-note">Telegram-канал для тестеров появится здесь же; пока заявки принимаются через GitHub или email. Публикация в RuStore — на подходе. <a href="https://github.com/nemezida1337/ddeck-client/issues/new?template=beta.yml">Заявка не требует устанавливать ничего заранее</a>.</p>
+    </div>
+  </section>
+
+  <section class="section" id="install">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="label">Установка</div><h2>Три шага. Без магии.</h2></div>
+        <p>DSH уже установлен? Пропустите первый шаг. Плагин ставится из npm или через маркет DSH.</p>
+      </div>
+      <div class="install-grid">
+        <div class="install-item"><h3>1. DeepSeek Harness</h3><p>Официальное приложение для macOS и Windows. Или web/CLI-версия, если вы уже ею пользуетесь.</p><a class="button outline" href="https://www.deepseek.com/harness/">Скачать DSH</a></div>
+        <div class="install-item"><h3>2. Плагин DDeck</h3><p>Команда для терминала или установка из маркета — без терминала.</p><button class="button" type="button" data-open-dialog="plugin-install">Установить плагин</button></div>
+        <div class="install-item"><h3>3. APK на телефон</h3><p>Android 10+. Приложение само проверяет, есть ли новая beta.</p><a class="button outline" href="https://github.com/nemezida1337/ddeck-client/releases/download/v0.9.13-beta/DDeck-0.9.13-beta.apk">Скачать APK</a></div>
+        <div class="install-item"><h3>Затем — QR</h3><p>В панели DDeck нажмите «Новый код», на телефоне — «Сканировать QR». Код живёт 5 минут.</p><a href="https://github.com/nemezida1337/ddeck-client/blob/main/docs/GETTING-STARTED.md">Полный гайд →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="roadmap">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="label">После беты</div><h2>Что дальше.</h2></div>
+        <p>Сначала — стабильность и ваши баги. Дальше — облако, команды и другие платформы.</p>
+      </div>
+      <div class="roadmap">
+        <div class="road"><span class="label">Cloud</span><h3>DDeck Cloud</h3><p>Подключение без Tailscale и своего VPS; рабочая область — в мобильном приложении.</p></div>
+        <div class="road"><span class="label">Team</span><h3>Групповой доступ</h3><p>Пароль, роли и отзыв доступа к одному компьютеру, серверу или облачной рабочей области.</p></div>
+        <div class="road"><span class="label">Mobile</span><h3>iOS, iPad, планшеты</h3><p>Нативное приложение и адаптация интерфейса под большие экраны, клавиатуру и split view.</p></div>
+        <div class="road"><span class="label">Shared</span><h3>Коллективная работа</h3><p>Несколько людей в одной рабочей области, у каждого — своя независимая сессия.</p></div>
+      </div>
+      <p class="roadmap-note">Это направления, а не обещания по датам. Подробнее — <a href="https://github.com/nemezida1337/ddeck-client/blob/main/docs/ROADMAP.md">ROADMAP.md</a>.</p>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="section-head"><div><div class="label">Вопросы</div><h2>Коротко.</h2></div></div>
+      <div class="faq">
+        <details><summary>Нужен ли Tailscale?</summary><p>Нет, если телефон и компьютер в одной сети. Для доступа из любой сети — Tailscale (бесплатен для личного использования) или свой VPS-релей.</p></details>
+        <details><summary>Сколько компьютеров можно добавить?</summary><p>Несколько. Список хранится на телефоне; переключение — «Ещё → Сменить компьютер». У каждого компьютера свои сессии.</p></details>
+        <details><summary>Что с безопасностью?</summary><p>Свой TLS-сертификат с закреплением, одноразовый QR на 5 минут, токены в Android Keystore. У DDeck нет собственных серверов.</p></details>
+        <details><summary>Это официальный клиент DeepSeek?</summary><p>Нет. DDeck — неофициальный Android-клиент к вашему DeepSeek Harness; он не заменяет DSH и не связан с DeepSeek.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Просмотр скриншота" aria-hidden="true">
+  <button class="lightbox-close" type="button" aria-label="Закрыть">×</button>
+  <figure class="lightbox-figure">
+    <img id="lightbox-image" alt="">
+    <figcaption class="lightbox-caption" id="lightbox-caption"></figcaption>
+  </figure>
+</div>
+
+<footer>
+  <div class="wrap footer">
+    <div><a class="brand" href=""><img src="icon.svg" alt="">DDeck</a><div class="footer-note">DeepSeek Harness с телефона.<br>Неофициальный клиент. Не связан с DeepSeek.</div></div>
+    <div class="footer-links"><a href="#testers">Стать тестером</a><a href="https://github.com/nemezida1337/ddeck-client">GitHub</a><a href="https://github.com/nemezida1337/ddeck-client/releases">Releases</a><a href="https://www.npmjs.com/package/ddeck-remote">npm</a><a href="https://github.com/nemezida1337/ddeck-client/blob/main/docs/CONNECT.md">Подключение</a><a href="https://github.com/nemezida1337/ddeck-client/blob/main/docs/PRIVACY.md">Приватность</a><a href="https://github.com/nemezida1337/ddeck-client/blob/main/LICENSE">Apache-2.0</a></div>
+  </div>
+</footer>
+
+<dialog id="plugin-install" aria-labelledby="plugin-install-title">
+  <div class="dialog-head"><h3 id="plugin-install-title">Поставить плагин DDeck</h3><button type="button" data-close-dialog aria-label="Закрыть">×</button></div>
+  <div class="dialog-body">
+    <p>Плагин живёт на компьютере. Сайт не может выполнить команду сам — скопируйте её в терминал. Это одна установка пакета из npm.</p>
+    <ol>
+      <li><strong>DSH уже установлен?</strong> Если нет — <a href="https://www.deepseek.com/harness/">скачайте официальное приложение</a>.</li>
+      <li><strong>Вставьте команду</strong> в Terminal (macOS/Linux) или PowerShell (Windows).</li>
+      <li><strong>Перезапустите DSH</strong> — появится панель DDeck.</li>
+    </ol>
+    <div class="cmd-row"><pre><code id="cmd-dialog">dsh plugin --profile desktop add ddeck-remote</code></pre><button class="copy" data-copy="cmd-dialog" type="button">Копировать</button></div>
+    <p class="small">Для web/CLI-профиля замените <code>desktop</code> на <code>web</code>. <strong>Без терминала:</strong> добавьте индекс ниже в «Плагины → Обзор → Источники индексов» и установите DDeck из карточки.</p>
+    <div class="cmd-row"><pre><code id="cmd-market">https://nemezida1337.github.io/ddeck-client/index.json</code></pre><button class="copy" data-copy="cmd-market" type="button">Копировать</button></div>
+    <div class="os-links" aria-label="Скачать DeepSeek Harness"><a href="https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe">Windows</a><a href="https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg">macOS Apple Silicon</a><a href="https://download.deepseek.com/desktop/dsh-latest-macos-x64.dmg">macOS Intel</a><a href="https://www.deepseek.com/harness/">Linux / все</a></div>
+    <div class="dialog-actions"><a class="button" href="dsh://open">Открыть DSH</a><button class="button outline" type="button" data-copy-id="cmd-dialog">Скопировать команду</button><button class="button outline" type="button" data-close-dialog>Готово</button></div>
+  </div>
+</dialog>
+
+<script>
+  var installDialog = document.getElementById('plugin-install');
+  document.querySelectorAll('[data-open-dialog]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (installDialog && typeof installDialog.showModal === 'function') installDialog.showModal();
+      else if (installDialog) installDialog.setAttribute('open', '');
+    });
+  });
+  document.querySelectorAll('[data-close-dialog]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (installDialog && typeof installDialog.close === 'function') installDialog.close();
+      else if (installDialog) installDialog.removeAttribute('open');
+    });
+  });
+  document.querySelectorAll('[data-copy-id]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var text = document.getElementById(button.getAttribute('data-copy-id'))?.innerText ?? '';
+      copyText(text, button);
+    });
+  });
+  document.querySelectorAll('.copy').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var text = document.getElementById(button.getAttribute('data-copy'))?.innerText ?? '';
+      copyText(text, button);
+    });
+  });
+  function copyText(text, button) {
+    var done = function () {
+      var old = button.textContent;
+      button.textContent = 'Скопировано';
+      button.classList.add('copied');
+      setTimeout(function () { button.textContent = old; button.classList.remove('copied'); }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done).catch(done);
+    else {
+      var a = document.createElement('textarea'); a.value = text; a.style.position = 'fixed'; a.style.opacity = '0';
+      document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} document.body.removeChild(a); done();
+    }
+  }
+  var commands = {
+    desktop: ['dsh plugin --profile desktop add ddeck-remote', '<strong>После установки полностью перезапустите DSH</strong> — панель DDeck появляется при старте.'],
+    web: ['dsh plugin --profile web add ddeck-remote', '<strong>После установки полностью перезапустите DSH/web-сервер</strong> — панель DDeck появляется при старте.'],
+    market: ['https://nemezida1337.github.io/ddeck-client/index.json', 'Добавьте адрес в DSH → «Плагины → Обзор → Источники индексов», затем установите DDeck из карточки.']
+  };
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (other) { other.classList.remove('active'); other.setAttribute('aria-selected', 'false'); });
+      tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
+      var command = commands[tab.getAttribute('data-command')];
+      document.getElementById('cmd-install').textContent = command[0];
+      document.getElementById('cmd-note').innerHTML = command[1];
+    });
+  });
+  document.querySelectorAll('.nav-links a').forEach(function (link) {
+    link.addEventListener('click', function () {
+      document.querySelector('.nav-links').classList.remove('open');
+      document.querySelector('.nav-toggle')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+  if (installDialog) installDialog.addEventListener('click', function (event) { if (event.target === installDialog) installDialog.close(); });
+
+  // Кликабельные скриншоты: превью в галерее, полный размер — в лайтбоксе.
+  (function () {
+    var box = document.getElementById('lightbox');
+    if (!box) return;
+    var img = document.getElementById('lightbox-image');
+    var caption = document.getElementById('lightbox-caption');
+    var close = box.querySelector('.lightbox-close');
+    var previous = null;
+    function open(src, text) {
+      previous = document.activeElement;
+      img.src = src;
+      img.alt = text || 'Скриншот DDeck';
+      caption.textContent = text || '';
+      box.setAttribute('open', '');
+      box.setAttribute('aria-hidden', 'false');
+      close.focus();
+    }
+    function hide() {
+      box.removeAttribute('open');
+      box.setAttribute('aria-hidden', 'true');
+      img.removeAttribute('src');
+      if (previous && previous.focus) previous.focus();
+    }
+    document.querySelectorAll('.shot').forEach(function (shot) {
+      var picture = shot.querySelector('img');
+      if (!picture) return;
+      var text = (shot.querySelector('span') || {}).textContent || picture.alt || '';
+      shot.setAttribute('role', 'button');
+      shot.setAttribute('tabindex', '0');
+      shot.setAttribute('aria-label', 'Увеличить: ' + text);
+      shot.addEventListener('click', function () { open(picture.src, text); });
+      shot.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(picture.src, text); } });
+    });
+    document.querySelectorAll('img.zoomable').forEach(function (picture) {
+      picture.setAttribute('tabindex', '0');
+      picture.setAttribute('role', 'button');
+      picture.setAttribute('aria-label', 'Увеличить: ' + (picture.alt || 'скриншот DDeck'));
+      picture.addEventListener('click', function () { open(picture.src, picture.alt); });
+      picture.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(picture.src, picture.alt); } });
+    });
+    close.addEventListener('click', hide);
+    box.addEventListener('click', function (event) { if (event.target === box) hide(); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && box.hasAttribute('open')) hide(); });
+  })();
+</script>
+</body>
+</html>
