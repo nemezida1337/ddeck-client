@@ -1,0 +1,90 @@
+{
+  "format": 1,
+  "title": {
+    "en": "DDeck remote plugins",
+    "ru": "Плагины DDeck"
+  },
+  "description": {
+    "en": "DeepSeek Harness plugins from the DDeck project. Add this index URL on the Plugins page to browse and install.",
+    "ru": "Плагины DeepSeek Harness от проекта DDeck. Добавьте адрес индекса на странице «Плагины», чтобы просматривать и устанавливать."
+  },
+  "metadata": {
+    "categories": {
+      "interface": {
+        "title": {
+          "en": "Interface",
+          "ru": "Интерфейс"
+        }
+      },
+      "remote": {
+        "title": {
+          "en": "Remote access",
+          "ru": "Удалённый доступ"
+        }
+      }
+    },
+    "labels": {
+      "community": {
+        "title": {
+          "en": "Community",
+          "ru": "Сообщество"
+        }
+      },
+      "no-telemetry": {
+        "title": {
+          "en": "No telemetry",
+          "ru": "Без телеметрии"
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "ddeck-remote",
+      "title": {
+        "en": "DDeck — phone remote",
+        "ru": "DDeck — пульт с телефона"
+      },
+      "description": {
+        "en": "Connect your Android phone to DeepSeek Harness: pairing, TLS gateway, mobile interface, several computers and Windows/Linux installers.",
+        "ru": "Подключение Android-телефона к DeepSeek Harness: сопряжение, TLS-шлюз, мобильный интерфейс, несколько компьютеров и установщики для Windows/Linux."
+      },
+      "icon": "icon.svg",
+      "author": "DDeck contributors",
+      "homepage": "https://github.com/nemezida1337/ddeck-client#readme",
+      "repository": {
+        "url": "https://github.com/nemezida1337/ddeck-client"
+      },
+      "metadata": {
+        "category": "remote",
+        "labels": [
+          "community",
+          "no-telemetry"
+        ],
+        "keywords": [
+          "dsh",
+          "deepseek-harness",
+          "remote",
+          "android",
+          "phone",
+          "tls"
+        ]
+      },
+      "dist-tags": {
+        "latest": "0.9.16-beta"
+      },
+      "versions": [
+        {
+          "version": "0.9.16-beta",
+          "publishTimestamp": 1793651996,
+          "source": {
+            "type": "npm"
+          },
+          "engines": {
+            "dsh": "^0.1.5-rc.1 || ^0.2.1-rc.2 || ^0.2.2-alpha.2"
+          }
+        }
+      ]
+    }
+  ]
+}
