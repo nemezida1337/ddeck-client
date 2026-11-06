@@ -1,0 +1,58 @@
+name: Заявка в бету DDeck
+description: Хочу тестировать DDeck на Android и помочь с обратной связью
+title: "[Бета] "
+labels: ["beta"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо! Заполните коротко — я помогу с установкой DSH, плагина и APK.
+  - type: input
+    id: contact
+    attributes:
+      label: Как с вами связаться
+      description: Telegram, email или другой способ
+      placeholder: "@username / email"
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: Телефон
+      description: Модель и версия Android
+      placeholder: "OnePlus 13, Android 17"
+    validations:
+      required: true
+  - type: input
+    id: computer
+    attributes:
+      label: Компьютер
+      description: macOS / Windows / Linux и версия DeepSeek Harness, если уже установлен
+      placeholder: "macOS, DSH 0.2.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: dsh
+    attributes:
+      label: Установлен ли DeepSeek Harness?
+      options:
+        - "Да, уже пользуюсь"
+        - "Нет, нужна помощь с установкой"
+        - "Пока не уверен(а)"
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Что хотите проверить
+      description: Например: подключение второго телефона, терминал, уведомления, настройки
+      placeholder: "Хочу проверить уведомления и работу с двумя компьютерами"
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Подтверждения
+      options:
+        - label: "Понимаю, что это бета, и готов(а) сообщать о багах"
+          required: true
+        - label: "Готов(а) позже участвовать в закрытом тесте Google Play (14 дней, Google-аккаунт)"
+          required: false
