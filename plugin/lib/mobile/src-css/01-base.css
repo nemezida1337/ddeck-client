@@ -1,0 +1,11 @@
+/* ── 1. ОСНОВА: ТЕМА И СИСТЕМНЫЕ ЦВЕТА ───────────────────────────────────────────
+ * Переменных вида --dsw-alias-* в клиенте нет (проверено), а системный Canvas не
+ * переключается на лету: в «светлой» пробе текст становился чёрным, а фон оставался
+ * тёмным — нечитаемо. Поэтому тему читает слой и выставляет свои переменные явно.
+ * Тема приходит из color-scheme клиента (см. applyTheme в skin.js).
+ */
+
+html[data-dshm-theme="dark"]{--dshm-surface:#1b1b1c;--dshm-raised:color-mix(in srgb, var(--dshm-surface,#1b1b1c) 92%, var(--dshm-ink,#ffffff));--dshm-ink:#ffffff;--dshm-line:rgba(255,255,255,.14);--dshm-scrim:rgba(0,0,0,.45)}
+
+html[data-dshm-theme="light"]{--dshm-surface:#ffffff;--dshm-raised:color-mix(in srgb, var(--dshm-surface,#ffffff) 94%, var(--dshm-ink,#111114));--dshm-ink:#111114;--dshm-line:rgba(0,0,0,.14);--dshm-scrim:rgba(0,0,0,.28)}
+

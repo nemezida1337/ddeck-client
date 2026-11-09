@@ -1,0 +1,812 @@
+/* ── 18. НАСТРОЙКИ НА ТЕЛЕФОНЕ ───────────────────────────────────────────────
+ * Нативная модалка DSH рассчитана на 800×800: двухколоночная навигация,
+ * десктопные карточки и кубы темы. На 360 dp она растягивается, но внутренние
+ * метрики остаются настольными. Ниже — не «ещё немного отступов», а мобильная
+ * компоновка: заголовок с закрытием, вкладки в две строки, одна прокручиваемая
+ * зона и компактные строки. Все селекторы ограничены data-shortcut-modal.
+ */
+@media (max-width: 760px) {
+  html[data-dshm-settings-open] :is([data-composer-dock="true"], [data-dshm-composer-dock]) {
+    display: none !important;
+  }
+
+  [data-shortcut-modal="settings"] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--dshm-surface, #16181c) !important;
+  }
+
+  /* Заголовок и закрытие: одна компактная строка вместо пустого header
+   * высотой 54 px внутри content. */
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: .4rem .75rem .35rem !important;
+    gap: .45rem !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "])
+    :is([class$="_navTitle"], [class*="_navTitle "]) {
+    padding: 0 2.75rem 0 .1rem !important;
+    font-size: 1.2rem !important;
+    line-height: 2.25rem !important;
+    font-weight: 600 !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]) {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+
+  /* Header внутри content был отдельной пустой полосой; закрытие переносим в
+   * правый верхний угол модалки, действия десктопа скрываем. */
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "])
+    > :is([class$="_header"], [class*="_header "]) {
+    position: static !important;
+    display: block !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  [data-shortcut-modal="settings"] [class*="_header"] [class*="_actions"] {
+    display: none !important;
+  }
+
+  [data-shortcut-modal="settings"] [class*="_close"] {
+    position: absolute !important;
+    top: calc(env(safe-area-inset-top) + .35rem) !important;
+    right: .55rem !important;
+    z-index: 8 !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: .6rem !important;
+    background: transparent !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "])
+    > :is([class$="_options"], [class*="_options "]) {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: .1rem .8rem calc(env(safe-area-inset-bottom) + 1.1rem) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Пять разделов: две строки компактных вкладок вместо горизонтальной ленты,
+   * в которой видны только три. */
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "])
+    > :is([class$="_navList"], [class*="_navList "]) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .3rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: 0 !important;
+    scrollbar-width: none !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_navList"], [class*="_navList "])::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "])
+    > :is([class$="_navList"], [class*="_navList "])
+    > :is([class$="_navCell"], [class*="_navCell "]) {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.5rem !important;
+    padding: 0 .5rem !important;
+    gap: .25rem !important;
+    border-radius: .55rem !important;
+    font-size: .8rem !important;
+    line-height: 2.5rem !important;
+    box-sizing: border-box !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+  }
+
+  /* Пять разделов укладываются в три строки; последний занимает всю ширину,
+   * чтобы не оставлять пустую колонку. */
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "])
+    > :is([class$="_navList"], [class*="_navList "])
+    > :is([class$="_navCell"], [class*="_navCell "]):last-child {
+    grid-column: 1 / -1;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_navCell"], [class*="_navCell "])
+    :is([class$="_navIcon"], [class*="_navIcon "]) {
+    width: .9rem !important;
+    height: .9rem !important;
+    flex: none !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_navLabel"], [class*="_navLabel "]) {
+    flex: 0 1 auto !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  /* Общие отступы секций. */
+  [data-shortcut-modal="settings"] :is([class$="_section"], [class*="_section "]) {
+    width: 100% !important;
+    max-width: none !important;
+    padding: .3rem 0 .4rem !important;
+    gap: .55rem !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_heading"], [class*="_heading "]),
+  [data-shortcut-modal="settings"] :is([class$="_title"], [class*="_title "]) {
+    font-size: 1rem !important;
+    line-height: 1.35 !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_intro"], [class*="_intro "]),
+  [data-shortcut-modal="settings"] :is([class$="_desc"], [class*="_desc "]) {
+    font-size: .78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  /* Учётная запись: карточка-строка, а не переносимый десктопный блок. */
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]) {
+    padding: .65rem .8rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: .45rem !important;
+    border-radius: .8rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]) > :is([class$="_identity"], [class*="_identity "]) {
+    width: 100% !important;
+    min-height: 2.5rem !important;
+    gap: .65rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_avatar"], [class*="_avatar "]) {
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    flex: none !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_identityCopy"], [class*="_identityCopy "]) {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    gap: .1rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_name"], [class*="_name "]) {
+    font-size: .9375rem !important;
+    line-height: 1.35 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_status"], [class*="_status "]),
+  [data-shortcut-modal="settings"] :is([class$="_unavailable"], [class*="_unavailable "]) {
+    font-size: .75rem !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_accountInfo"], [class*="_accountInfo "]) {
+    align-self: flex-start !important;
+    font-size: .75rem !important;
+    line-height: 1.4 !important;
+    margin-left: 2.75rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_balanceCard"], [class*="_balanceCard "]) {
+    padding: .65rem .8rem !important;
+    gap: .3rem !important;
+    border-radius: .8rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) {
+    min-height: 2.5rem !important;
+    padding: .25rem 0 !important;
+    gap: .5rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_divider"], [class*="_divider "]) {
+    margin: .1rem 0 !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_links"], [class*="_links "]),
+  [data-shortcut-modal="settings"] :is([class$="_actions"], [class*="_actions "]) {
+    gap: .4rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_linkButton"], [class*="_linkButton "]) {
+    height: 2.5rem !important;
+    min-width: 0 !important;
+    padding: 0 .7rem !important;
+    font-size: .78rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_amount"], [class*="_amount "]) {
+    font-size: 1.1rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Оформление: три компактных сегмента в одну строку. */
+  [data-shortcut-modal="settings"] :is([class$="_group"], [class*="_group "]) {
+    padding: .7rem 0 !important;
+    gap: .45rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cubeRow"], [class*="_cubeRow "]) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: .35rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_themeCube"], [class*="_themeCube "]) {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 3.2rem !important;
+    padding: .4rem .2rem !important;
+    gap: .15rem !important;
+    border-radius: .6rem !important;
+    font-size: .72rem !important;
+    line-height: 1.25 !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_themeCube"], [class*="_themeCube "]) svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Строки с контролом: описание сверху, контрол снизу с крупной целью. */
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) {
+    flex-wrap: wrap !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_rowText"], [class*="_rowText "]) {
+    flex: 1 1 100% !important;
+    padding-right: 0 !important;
+    gap: .15rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_control"], [class*="_control "]) {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: .45rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_stepper"], [class*="_stepper "]) {
+    min-width: 6.5rem !important;
+    height: 2.75rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_arrows"], [class*="_arrows "]) {
+    position: static !important;
+    flex-direction: row !important;
+    opacity: 1 !important;
+    margin-left: auto !important;
+    padding-right: .2rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_arrow"], [class*="_arrow "]) {
+    width: 2.25rem !important;
+    height: 2.75rem !important;
+    border-radius: .35rem !important;
+  }
+
+  /* Провайдеры моделей: компактные карточки и 44-пиксельные действия. */
+  [data-shortcut-modal="settings"] :is([class$="_rowCard"], [class*="_rowCard "]) {
+    padding: .65rem .8rem !important;
+    gap: .45rem !important;
+    border-radius: .8rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_rowHead"], [class*="_rowHead "]) {
+    flex-wrap: wrap !important;
+    gap: .4rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_rowActions"], [class*="_rowActions "]) {
+    margin-left: auto !important;
+    gap: .25rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_primaryButton"], [class*="_primaryButton "]),
+  [data-shortcut-modal="settings"] :is([class$="_secondaryButton"], [class*="_secondaryButton "]),
+  [data-shortcut-modal="settings"] :is([class$="_addButton"], [class*="_addButton "]),
+  [data-shortcut-modal="settings"] :is([class$="_dangerButton"], [class*="_dangerButton "]) {
+    height: 2.5rem !important;
+    padding: 0 .7rem !important;
+    font-size: .8rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Плагины: вкладки не наезжают друг на друга. */
+  [data-shortcut-modal="settings"] :is([class$="_tabs"], [class*="_tabs "]) {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: .35rem !important;
+    border-bottom: 1px solid var(--dshm-line, rgba(255,255,255,.12)) !important;
+    margin-top: .1rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_tab"], [class*="_tab "]) {
+    flex: 0 0 auto !important;
+    min-height: 2.5rem !important;
+    padding: .35rem .75rem !important;
+    font-size: .8rem !important;
+    line-height: 1.4 !important;
+    border-radius: .45rem .45rem 0 0 !important;
+    white-space: nowrap !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_panel"], [class*="_panel "]) {
+    padding-top: .2rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cards"], [class*="_cards "]) {
+    gap: .5rem !important;
+  }
+
+  /* Пресеты и прочие списки: карточки не растягиваются на пол-экрана. */
+}
+
+/* Пресеты агента: описания в четыре строки и карточки с большими полями
+ * превращали список в простыню. Ограничиваем описание двумя строками и
+ * сжимаем карточку, оставляя заголовок, id и действия. */
+@media (max-width: 760px) {
+  [data-shortcut-modal="settings"] :is([class$="_cards"], [class*="_cards "]) {
+    grid-template-columns: 1fr !important;
+    gap: .5rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]) {
+    border-radius: .8rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cardMain"], [class*="_cardMain "]) {
+    padding: .7rem .8rem .45rem !important;
+    gap: .35rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cardHead"], [class*="_cardHead "]) {
+    gap: .5rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cardName"], [class*="_cardName "]) {
+    font-size: .9rem !important;
+    line-height: 1.35 !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cardDesc"], [class*="_cardDesc "]) {
+    -webkit-line-clamp: 2 !important;
+    font-size: .78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_cardFoot"], [class*="_cardFoot "]) {
+    padding: .2rem .5rem .3rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_creatorButton"], [class*="_creatorButton "]) {
+    height: 2.75rem !important;
+    font-size: .8rem !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_group"], [class*="_group "]) + :is([class$="_group"], [class*="_group "]) {
+    margin-top: .7rem !important;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Header с крестиком убираем из потока; кнопку закрытия слой создаёт сам
+   * в правом верхнем углу модалки. Иначе desktop-заголовок оставлял пустую
+   * полосу между вкладками и содержимым. */
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "])
+    > :is([class$="_header"], [class*="_header "]) {
+    display: none !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .dshm-settings-close {
+    position: absolute !important;
+    top: calc(env(safe-area-inset-top) + .35rem) !important;
+    right: .55rem !important;
+    z-index: 9 !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border: 0 !important;
+    border-radius: .6rem !important;
+    background: transparent !important;
+    color: var(--dshm-ink, #fff) !important;
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  .dshm-settings-close:active {
+    background: var(--dshm-line, rgba(255,255,255,.12)) !important;
+  }
+}
+
+/* Настройки: жёстко держим ширину в границах экрана. На части прошивок
+ * desktop-модалка с шириной 800px оставляла layout шире viewport, из-за чего
+ * правая кромка карточек уходила за экран и обрезалась. */
+@media (max-width: 760px) {
+  [data-shortcut-modal="settings"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "])
+    > :is([class$="_options"], [class*="_options "]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-left: .8rem !important;
+    padding-right: .8rem !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_section"], [class*="_section "]) {
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]),
+  [data-shortcut-modal="settings"] :is([class$="_balanceCard"], [class*="_balanceCard "]),
+  [data-shortcut-modal="settings"] :is([class$="_rowCard"], [class*="_rowCard "]),
+  [data-shortcut-modal="settings"] :is([class$="_cards"], [class*="_cards "]),
+  [data-shortcut-modal="settings"] :is([class$="_group"], [class*="_group "]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* DDeck settings row is a desktop control: /dsh-remote/pairing is intentionally
+ * blocked for a paired phone and answers 404. Do not show its error row inside
+ * the phone settings. */
+@media (max-width: 760px) {
+  [data-shortcut-modal="settings"] [data-dshm-desktop-settings] {
+    display: none !important;
+  }
+}
+
+/* Переключатели внутри настроек: desktop-компонент в колонке получал ширину
+ * родителя и превращался в огромный круг. Фиксируем мобильный размер. */
+@media (max-width: 760px) {
+  [data-shortcut-modal="settings"] [role="switch"] {
+    flex: 0 0 auto !important;
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    max-width: 2.75rem !important;
+    height: 1.625rem !important;
+    min-height: 1.625rem !important;
+    max-height: 1.625rem !important;
+    box-sizing: border-box !important;
+  }
+
+  [data-shortcut-modal="settings"] [role="switch"] > * {
+    max-width: 100% !important;
+  }
+}
+
+
+/* DSH 0.2.2 adds its own quadrant opener above the mobile menu; keep the
+ * button in the DOM for programmatic opening but do not show a second one. */
+[data-sidebar-opener="true"] { opacity: 0 !important; pointer-events: none !important; }
+
+/* DSH 0.2.2 re-renders the native sidebar rows after our one-time pass.
+ * Keep the duplicated top automation row and the native account row hidden;
+ * the same actions live in our bottom navigation. */
+:is([class$="_panelRow"], [class*="_panelRow "])[aria-label="Задачи автоматизации"],
+:is([class$="_panelRow"], [class*="_panelRow "])[aria-label="Плагины"],
+:is([class$="_panelRow"], [class*="_panelRow "])[aria-label="Ещё"],
+:is([class$="_triggerRow"], [class*="_triggerRow "]) { display: none !important; }
+
+/* Mobile settings: no desktop keyboard-shortcut editor. */
+[data-dshm-shortcuts] { display: none !important; }
+
+/* The built-in plugins catalogue is a desktop grid; on a 360px phone it
+ * overflowed horizontally and clipped group/card titles. Constrain every
+ * level to the viewport and let titles wrap instead of creating a scrollbar. */
+[data-shortcut-modal="settings"] [class*="_options"] { overflow-x: hidden !important; }
+[data-shortcut-modal="settings"] :is([class*="_section"], [class*="_panel"], [class*="_catalog"], [class*="_group"], [class*="_groupTitleRow"], [class*="_headerEnd"]) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+[data-shortcut-modal="settings"] [class*="_cardTitle"] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+[data-shortcut-modal="settings"] [class*="_headerEnd"] { flex-wrap: wrap !important; }
+
+/* Built-in plugins: the session-plugins group puts a wide PTC switcher next to
+ * the group title. On a 360px phone the flex row forced a 584px scrollWidth.
+ * Let the title and the switcher share/wrap rows instead of overflowing. */
+[data-shortcut-modal="settings"] [class*="_groupTitleRow"] {
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+[data-shortcut-modal="settings"] :is([class*="_groupToggle"], [class*="_headerEnd"], [class*="_switcher"]) {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+[data-shortcut-modal="settings"] [class*="_switcherLabel"] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Mobile page headers in DSH 0.2.2 are desktop compositions: title/intro are
+ * shifted by --plugin-part-x and the tabs sit narrower than the content. Align
+ * every secondary page to one 16px rail and keep its body above the Android
+ * navigation bar. */
+:is([class$="_pageTitle"], [class*="_pageTitle "]) {
+  --plugin-part-x: 0px !important;
+  width: calc(100% - 32px) !important;
+  max-width: calc(100% - 32px) !important;
+  margin-left: 16px !important;
+  margin-right: 16px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  transition: none !important;
+}
+:is([class$="_pageIntro"], [class*="_pageIntro "]) {
+  --plugin-part-x: 0px !important;
+  width: calc(100% - 32px) !important;
+  max-width: calc(100% - 32px) !important;
+  margin-left: 16px !important;
+  margin-right: 16px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+:is([class$="_pageTabs"], [class*="_pageTabs "]) {
+  --plugin-part-x: 0px !important;
+  width: calc(100% - 32px) !important;
+  max-width: calc(100% - 32px) !important;
+  margin-left: 16px !important;
+  margin-right: 16px !important;
+}
+:is([class$="_pageTabs"], [class*="_pageTabs "]) > * {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+:is([class$="_pageBody"], [class*="_pageBody "]) {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+/* Secondary pages: two desktop tabs must stay on one line on a 360px phone. */
+:is([class$="_pageTabs"], [class*="_pageTabs "]) :is(button, [role="tab"]) {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 14px !important;
+}
+:is([class$="_pageBody"], [class*="_pageBody "]) {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* UX-спринт: safe area, единая сетка, мобильные фильтры/навигация. */
+[role="dialog"][data-shortcut-modal="sidebar"] {
+  padding-top: max(env(safe-area-inset-top, 0px), 28px) !important;
+  padding-bottom: 8px !important;
+  height: 100dvh !important;
+  box-sizing: border-box !important;
+}
+[role="dialog"][data-shortcut-modal="settings"] {
+  padding-top: max(env(safe-area-inset-top, 0px), 28px) !important;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  height: 100dvh !important;
+  box-sizing: border-box !important;
+}
+/* Одна левая линия для вторичных страниц. */
+:is([class$="_pageTitle"], [class*="_pageTitle "]) {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+:is([class$="_pageIntro"], [class*="_pageIntro "]) {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+:is([class$="_pageTabs"], [class*="_pageTabs "]) {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+:is([class$="_pageBar"], [class*="_pageBar "]) {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* Заголовок и действие — одна левая линия, действие справа. */
+:is([class$="_pageHeading"], [class*="_pageHeading "]) {
+  justify-content: flex-start !important;
+  align-items: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+:is([class$="_pageHeading"], [class*="_pageHeading "]) h1 {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  text-align: left !important;
+}
+:is([class$="_creationActions"], [class*="_creationActions "]) {
+  margin-left: auto !important;
+}
+
+/* Фильтры автоматизации — ровная сетка 2×2. */
+:is([class$="_filterTabs"], [class*="_filterTabs "]) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+:is([class$="_filterTab"], [class*="_filterTab "]) {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+}
+
+/* Навигация настроек — одна горизонтальная лента, без 2×2+1. */
+[data-shortcut-modal="settings"] :is([class$="_navList"], [class*="_navList "]) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+[data-shortcut-modal="settings"] :is([class$="_navCell"], [class*="_navCell "]) {
+  width: 100% !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+}
+[data-shortcut-modal="settings"] :is([class$="_navCell"], [class*="_navCell "]):last-child {
+  grid-column: 1 / -1 !important;
+}
+
+/* Sidebar: the custom bottom row sits above the list; reserve its height so the
+ * last session can scroll clear of it instead of being covered. */
+[role="dialog"][data-shortcut-modal="sidebar"] :is([class*="_listArea"], [class*="_treeBody"], [class*="_list"], [class*="_scrollBody"]) {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+/* Agent cards: title, badge and slug must not share one clipped desktop row. */
+[data-shortcut-modal="settings"] [class*="_cardMain"] {
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  row-gap: 6px !important;
+}
+[data-shortcut-modal="settings"] [class*="_cardTitle"] {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* P2: on a phone, page/header transitions read as flicker. Keep the drawer
+ * animation, but make secondary-page chrome and settings snap into place. */
+:is([class*="_pageBar"], [class*="_pageBody"], [class*="_page"], [class*="_mainPanel"]) {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+[data-shortcut-modal="settings"] {
+  animation: none !important;
+  transition: none !important;
+}
+[data-shortcut-modal="settings"] * {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Compact mobile settings: the desktop rows are too airy on 360px. */
+[data-shortcut-modal="settings"] :is([class*="_setting"], [class*="_section"]) {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* The hero otherwise centers the composer in the full scroll body, leaving a
+ * large void above and below. Lift it toward the top third on phones. */
+[data-phase="hero"] :is([class$="_scrollBody"], [class*="_scrollBody "]) {
+  justify-content: flex-start !important;
+  padding-top: max(10vh, 56px) !important;
+  padding-bottom: 24px !important;
+}
+
+/* The custom sidebar bar is an overlay. Fade the list into it so a partially
+ * scrolled session row reads as "more below", not as a clipped line. */
+.dshm-bottom-nav::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 18px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--dshm-surface, #1b1b1c));
+}
+
+/* Settings tabs are 41dp natively; keep a 44dp touch target. */
+[data-shortcut-modal="settings"] :is([class*="_navCell"], [class*="_navCell "]) {
+  min-height: 44px !important;
+}

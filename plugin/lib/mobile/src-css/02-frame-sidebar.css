@@ -1,0 +1,136 @@
+/* ── 2. КАРКАС И БОКОВАЯ ПАНЕЛЬ (ВЫДВИЖНОЙ ЯЩИК) ─────────────────────────────────
+ * Сетка кадра, рейка, панель, затенение, кнопка меню и всё, что живёт внутри
+ * боковой панели: поиск, строки сессий и рабочих областей, действия выбранной
+ * строки, подвал панели. Исходно `display: grid` с колонками `56px 304px 0px`;
+ * в открытой панели `280px 80px 0px` — из 360 px ширины содержимому остаётся 80,
+ * то есть телефон становится непригодным. На телефоне колонка одна, а панель
+ * приходит поверх — как в любом мобильном приложении. Все замеры — 360 × 800,
+ * плотность 3.
+ */
+
+/* Только каркас приложения: `_frame` есть ещё у десятка сеток (например, плитки
+ * вложений), и глобальное правило рвало их раскладку. */
+:is([class$="_frame"], [class*="_frame "]):has(> :is([class$="_centerCol"], [class*="_centerCol "])){grid-template-columns:1fr!important}
+
+:is([class$="_centerCol"], [class*="_centerCol "]){grid-column:1!important;grid-row:1!important;min-width:0!important}
+
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]){grid-column:1!important;grid-row:1!important;min-width:0!important}
+
+/* Правая колонка стоит в той же ячейке сетки, что и содержимое, и, будучи нулевой
+ * ширины, всё равно перехватывала касания: аудит насчитал 12 элементов, которые
+ * «накрыты pI_x6G_rightbarCol» — заголовок, кнопки копирования, реакции. Нажатия
+ * проходят только у её собственного содержимого.
+ */
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]){pointer-events:none!important}
+
+:is([class$="_rightbarCol"], [class*="_rightbarCol "]) > *{pointer-events:auto}
+
+/* Один слой вместо двух: у клиента внутренний root ящика имел свой фон и ширину
+ * меньше колонки, из-за чего меню выглядело как панель на панели. Фон внутреннего
+ * root прозрачный, ширина — на всю колонку; остаётся один край и одна поверхность. */
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]) > div > [class*="_root"]{
+  background:transparent!important;
+  width:100%!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]){position:fixed!important;top:0;bottom:0;left:0;width:min(19rem,84vw)!important;z-index:60;transform:translate3d(-102%,0,0);will-change:transform;backface-visibility:hidden;transition:transform .22s cubic-bezier(.2,.7,.3,1);background:var(--dshm-surface,#1b1b1c)!important;color:var(--dshm-ink,#ffffff)!important;border-right:1px solid var(--dshm-line,rgba(255,255,255,.14))!important;box-shadow:.75rem 0 2rem rgba(0,0,0,.45)!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);overflow:hidden!important;overscroll-behavior:contain}
+
+/* Панель живёт в собственном слое композитора.
+   *
+   * Замеры: без слоя открытие стоило 167–267 мс и до шести длинных задач — браузер
+   * каждый раз перерисовывал всю колонку. С `will-change: transform` и сдвигом через
+   * translate3d открытие и закрытие укладываются в 8–9 мс без длинных задач.
+   */
+/* !important обязателен: наш <style> вставлен в <head> раньше стилей клиента, и при
+   * равной специфичности панель оставалась тёмной в светлой теме.
+   */
+/* Прокрутка, а не обрезка: рабочих областей и сессий может быть много, и
+   * `overflow: hidden` просто съедал бы нижние строки.
+   */
+html:not([data-dshm-native-sidebar]) html[data-dshm-drawer] :is([class$="_sidebarCol"], [class*="_sidebarCol "]){transform:translate3d(0,0,0)!important}
+
+/* Затемнение под панелью: нажатие снаружи закрывает её — привычный жест. */
+.dshm-scrim{position:fixed;inset:0;z-index:55;background:var(--dshm-scrim,rgba(0,0,0,.72));opacity:0;pointer-events:none;transition:opacity .22s ease;border:0;padding:0;cursor:pointer}
+
+html[data-dshm-drawer] .dshm-scrim{opacity:1;pointer-events:auto}
+
+.dshm-menu{position:fixed;z-index:50;left:max(.5rem,env(safe-area-inset-left));top:calc(env(safe-area-inset-top) + .5rem);width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--dshm-line,rgba(255,255,255,.14));border-radius:.75rem;background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#ffffff);cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+.dshm-menu svg{width:1.25rem;height:1.25rem}
+
+html[data-dshm-drawer] .dshm-menu{opacity:0;pointer-events:none}
+
+/* Кнопки «Отключить» и подобные — замер: 36 px (min-height 2.25rem). */
+/* Панель — родная колонка клиента: свои иконки, свои строки, свои группы. Свою копию
+ * интерфейса не рисуем: она теряла иконки и выглядела чужой.
+ */
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]){visibility:visible!important}
+
+/* Перехватчик изменения размера окна — настольная деталь.
+ *
+ * Аудит: он перекрывал кнопку «1 напоминание» в шапке чата, и та не нажималась вовсе.
+ */
+:is([class$="_frame"], [class*="_frame "]) :is([class$="_handle"], [class*="_handle "]){display:none!important}
+
+/* Подвал боковой панели.
+ *
+ * Замер: строке 256 px, в ней две кнопки плагинов по ~128 px — впритык, без зазора, и
+ * длинная подпись штатного плагина обрезается («Mobile acce…»). На телефоне список
+ * кнопок лучше ставить в столбик: подписи читаются целиком, а палец не попадает между
+ * двумя соседними целями.
+ */
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]){display:flex!important;flex-wrap:wrap!important;gap:.25rem!important;padding:.25rem 0!important}
+
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]) > *{flex:1 1 100%!important;min-width:0!important}
+
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]) :is([class$="_footerActions"], [class*="_footerActions "]) button{width:100%!important;min-width:0!important;height:2.75rem!important;justify-content:flex-start!important}
+
+/* Поиск по сессиям в боковой панели.
+ *
+ * Замер: поле 197 × 20 px, шрифт 13 px — палец по нему промахивается, а мелкий
+ * шрифт заставляет приближать. Поднимаем до 36 px и 16 px шрифта; строка поиска
+ * растёт вместе с полем.
+ */
+:is([class$="_searchInput"], [class*="_searchInput "]){height:2.75rem!important;font-size:1rem!important;padding:0 .5rem!important}
+
+/* Строки боковой панели.
+ *
+ * Замер: «Плагины» и «Автоматические задачи» 252x36, рабочая область 256x34, «Новая
+ * сессия» 252x38 — всё ниже 44, которые палец находит без прицеливания. Поднимаем до
+ * 44 и добавляем вертикальный воздух между смысловыми блоками.
+ */
+:is([class$="_panelRow"], [class*="_panelRow "]), :is([class$="_projectRow"], [class*="_projectRow "]), :is([class$="_newSession"], [class*="_newSession "]){min-height:2.75rem!important;align-items:center!important}
+
+:is([class$="_panelList"], [class*="_panelList "]){gap:.125rem!important}
+
+:is([class$="_groupSection"], [class*="_groupSection "]){margin-bottom:.25rem!important}
+
+/* Действия строки сессии — по первому касанию.
+ *
+ * На настольном клиенте закрепить/архивировать сессию можно с наведения мыши;
+ * на телефоне наведения нет, а одиночное касание сразу открывало диалог, и
+ * добраться до действий было нечем. Первый тап выбирает строку: подсветка,
+ * высота 44 и кнопки действий (меню, архив, закрепление). Второй тап открывает
+ * диалог. Кнопки — 32 px: три по 44 в строку шириной 256 не помещаются, но сама
+ * строка остаётся крупной целью, а действия доступны с первого касания.
+ */
+[role=treeitem][data-dshm-picked]{position:relative!important;min-height:2.75rem!important;background:color-mix(in srgb,var(--dshm-ink,#ffffff) 9%,transparent)!important;border-radius:.5rem!important;padding-right:5.25rem!important}
+
+[data-dshm-picked] :is([class$="_rowActions"], [class*="_rowActions "]){position:absolute!important;right:.25rem!important;top:50%!important;transform:translateY(-50%)!important;display:inline-flex!important;align-items:center!important;gap:.125rem!important;flex:none!important;background:var(--dshm-surface,#1b1b1c)!important;border-radius:.5rem!important;padding-left:.25rem!important;z-index:2!important}
+
+[data-dshm-picked] :is([class$="_rowActions"], [class*="_rowActions "]) button{width:2rem!important;height:2rem!important;min-width:2rem!important}
+
+/* Время у выбранной строки уступает место действиям: название важнее. */
+[data-dshm-picked] :is([class$="_time"], [class*="_time "]){display:none!important}
+
+:is([class$="_sessionOverflowButton"], [class*="_sessionOverflowButton "]){min-height:2.75rem!important}
+
+/* Боковая панель: бренд, свернуть, поиск, строки дерева. */
+:is([class$="_brand"], [class*="_brand "]){min-height:2.75rem!important}
+
+:is([class$="_toggle"], [class*="_toggle "]),:is([class$="_searchButton"], [class*="_searchButton "]){width:2.75rem!important;height:2.75rem!important}
+
+:is([class$="_list"], [class*="_list "]) [role=treeitem]{min-height:2.75rem!important}
+

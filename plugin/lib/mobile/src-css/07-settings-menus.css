@@ -1,0 +1,125 @@
+/* ── 7. НАСТРОЙКИ, МЕНЮ И ДИАЛОГИ ────────────────────────────────────────────────
+ * Пункты меню и списков — 34 px у родных, поля и кнопки закрытия в диалогах и
+ * справке по горячим клавишам — 18–28 px. Всё это поднимаем до 44 px, а поля — до
+ * 16 px шрифта: мелкий шрифт в поле ввода заставляет Android приближать страницу.
+ * Правило `[role=dialog] button` широкое намеренно: диалоги клиента рисуют кнопки
+ * своими классами, и без него цели остаются мелкими.
+ */
+
+/* Пункты выпадающих меню — 34 px у родных: «Переименовать», «Архивировать»
+ * и прочие действия в них жмутся пальцем. 44 — та же мера, что у строк панели. */
+[role=menuitem]{min-height:2.75rem!important}
+
+[data-shortcut-modal] :is([class$="_navCell"], [class*="_navCell "]){min-height:2.75rem!important}
+
+/* Меню слэш-команд и диалоги: пункты и поля — пальцевого размера.
+ * У активного пункта в className два класса (`_item _active`), поэтому суффиксный
+ * селектор его не ловил — берём вхождение и только кнопки, чтобы не растянуть
+ * служебные span-ы пункта. */
+[role=listbox] button[class*="_item"],[role=menu] button[class*="_item"]{min-height:2.75rem!important}
+
+[role=dialog] :is(input,select,textarea),[data-shortcut-modal] :is(input,select,textarea){min-height:2.75rem!important;font-size:1rem!important}
+
+[role=dialog] button[class*="_close"],[data-shortcut-modal] button[class*="_close"]{width:2.75rem!important;height:2.75rem!important}
+
+/* Настройки на телефоне: клиент рисует двухколоночную модалку — замер 312 × 752,
+ * навигация 188 px + содержимое 124 px, из-за чего текст переносится по 1–3 символа.
+ * На узком экране панель занимает весь кадр, разделы становятся строкой вкладок
+ * сверху, содержимое получает всю ширину и вертикальную прокрутку. */
+@media (max-width: 700px){
+  [data-shortcut-modal="settings"]{
+    position:fixed!important; inset:0!important;
+    width:100%!important; height:100dvh!important;
+    max-width:none!important; max-height:100dvh!important;
+    margin:0!important; border:0!important; border-radius:0!important;
+    padding-top:env(safe-area-inset-top)!important;
+    padding-bottom:env(safe-area-inset-bottom)!important;
+    box-sizing:border-box!important;
+    display:flex!important; flex-direction:column!important;
+    background:var(--dshm-surface,#16181c)!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]){
+    width:100%!important; height:auto!important; flex:0 0 auto!important;
+    display:flex!important; flex-direction:column!important;
+    border-right:0!important; padding:.5rem .75rem 0!important;
+    box-sizing:border-box!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navTitle"], [class*="_navTitle "]){
+    margin:0 0 .25rem!important; font-size:1.25rem!important; line-height:1.3!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navList"], [class*="_navList "]){
+    display:flex!important; flex-direction:row!important; flex-wrap:nowrap!important;
+    gap:.25rem!important; width:100%!important; overflow-x:auto!important;
+    padding-bottom:.375rem!important; scrollbar-width:none;
+    border-bottom:1px solid var(--dshm-line,rgba(255,255,255,.12));
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_nav"], [class*="_nav "]) :is([class$="_navCell"], [class*="_navCell "]){
+    flex:0 0 auto!important; width:auto!important; min-width:0!important;
+    min-height:2.75rem!important; padding:0 .75rem!important; white-space:nowrap!important;
+  }
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]){
+    width:100%!important; min-width:0!important; flex:1 1 auto!important;
+    overflow-y:auto!important; overflow-x:hidden!important;
+    padding:0 .75rem 1rem!important; box-sizing:border-box!important;
+  }
+  /* Карточки настроек внутри — настольные двухколоночные: аватар 42 px и текстовая
+   * колонка, которая в тесной модалке получала ширину 0 и переносила текст по слову.
+   * На телефоне карточка становится колонкой, аватар и текст — обычной строкой. */
+  [data-shortcut-modal="settings"] :is([class$="_section"], [class*="_section "]){width:100%!important}
+  [data-shortcut-modal="settings"] :is([class$="_card"], [class*="_card "]){
+    flex-direction:column!important; align-items:stretch!important; gap:.5rem!important;
+    width:100%!important; height:auto!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_identity"], [class*="_identity "]){
+    flex-direction:row!important; align-items:center!important;
+    width:100%!important; height:auto!important; gap:.75rem!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_identityCopy"], [class*="_identityCopy "]){
+    width:auto!important; flex:1 1 auto!important; min-width:0!important; height:auto!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_name"], [class*="_name "]),
+  [data-shortcut-modal="settings"] :is([class$="_status"], [class*="_status "]){width:auto!important}
+  [data-shortcut-modal="settings"] :is([class$="_accountInfo"], [class*="_accountInfo "]){align-self:flex-start!important; width:auto!important}
+
+  /* Строки настроек с пояснением настольные: текстовая колонка и контрол справа.
+   * В тесной модалке пояснению доставалась ширина 48 px (замер: desc 0 px),
+   * контрол наезжал на текст. На телефоне строка становится колонкой: пояснение
+   * сверху, контрол ниже во всю ширину. */
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]):has(:is([class$="_rowText"], [class*="_rowText "])){
+    flex-direction:column!important; align-items:stretch!important;
+    gap:.5rem!important; height:auto!important; width:100%!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) :is([class$="_rowText"], [class*="_rowText "]){
+    width:100%!important; min-width:0!important; max-width:none!important;
+    box-sizing:border-box!important; padding-right:0!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]) :is([class$="_desc"], [class*="_desc "]){
+    width:auto!important; min-width:0!important; max-width:none!important;
+    box-sizing:border-box!important; padding-right:0!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_row"], [class*="_row "]):has(:is([class$="_rowText"], [class*="_rowText "])) > :not(:is([class$="_rowText"], [class*="_rowText "])){
+    width:100%!important; max-width:none!important; align-self:stretch!important;
+  }
+  /* Заголовок группы «Встроенные»: кнопка + селект пресета; селект с настольной
+   * минимальной шириной выезжал за экран на 36 px. */
+  [data-shortcut-modal="settings"] :is([class$="_headerEnd"], [class*="_headerEnd "]){
+    flex:1 1 auto!important; min-width:0!important; max-width:100%!important;
+    justify-content:flex-end!important;
+  }
+  [data-shortcut-modal="settings"] :is([class$="_headerEnd"], [class*="_headerEnd "]) :is(select,button){
+    min-width:0!important; max-width:100%!important;
+  }
+  [data-shortcut-modal="settings"] select{max-width:100%!important}
+
+
+
+  [data-shortcut-modal="settings"] > :is([class$="_content"], [class*="_content "]) :is([class$="_header"], [class*="_header "]){
+    width:100%!important; min-height:2.75rem!important; position:sticky!important; top:0!important;
+    display:flex!important; align-items:center!important; justify-content:flex-end!important;
+    background:var(--dshm-surface,#16181c)!important; z-index:2!important;
+  }
+}
+
+/* Диалог «Добавить плагин»: текстовые ссылки-кнопки и выбор реестра — 15–28 px. */
+[role=dialog] button{min-height:2.75rem!important}
+

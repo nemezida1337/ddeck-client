@@ -1,0 +1,61 @@
+/* ── 8. ПРАВАЯ ПАНЕЛЬ: ФАЙЛЫ, ТЕРМИНАЛ, БРАУЗЕР, ЖУРНАЛ ──────────────────────────
+ * Содержимое панели на телефоне полезно, а настольные оконные операции — нет.
+ * Замер при открытой панели: сверху появлялись «Разделить» (28 × 28), «Выйти из
+ * полноэкранного режима» и «Новая вкладка» — этого на телефоне не существует; и
+ * весь ряд лежал в полосе системной строки (y = 10), где касания забирает система.
+ * Оставляем закрытие панели ниже безопасной зоны и вход в панель — 44 × 44.
+ * Классы правой панели статические (`_tabHostHeader_<hash>_<line>`), поэтому
+ * окончание имени тут не работает — ищем вхождение. Тулбары браузера (38 px) и
+ * журнала (кнопки 20–24 px, select 11 px) поднимаем до 44 и 16 px шрифта. Высота
+ * строк журнала зашита в виртуализацию (`INSPECTOR_ROW_HEIGHT`) — её не меняем,
+ * а мелким контролам растим зону нажатия через ::after.
+ */
+
+[data-dockkit-split-button],[data-sidebar-right-mode],[class*="_addTab_"]{display:none!important}
+
+/* Классы правой панели статические (`_tabHostHeader_<hash>_<line>`), поэтому
+ * окончание имени тут не работает — ищем вхождение. */
+[class*="_tabHostHeader_"]{padding-top:env(safe-area-inset-top)!important;box-sizing:border-box!important}
+
+/* В настройках правая панель — dockkit-вкладка с собственной полосой
+ * `_tabStrip_<hash>_<line>`; её кнопка закрытия лежала на y=10, в зоне системной
+ * строки. Полоса получает безопасную зону, как и заголовок вкладок. */
+[class*="_tabStrip_"]{min-height:calc(2.75rem + env(safe-area-inset-top))!important;align-items:center!important;padding-top:env(safe-area-inset-top)!important;box-sizing:border-box!important}
+
+[data-sidebar-right-toggle]{width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+
+[data-dockkit-tab]{min-height:2.75rem!important}
+
+[data-dockkit-tab-close]{width:2.75rem!important;height:2.75rem!important;opacity:1!important}
+
+[data-files-entry] button{min-height:2.75rem!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]){min-height:2.75rem!important;height:auto!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) input{height:2.75rem!important;font-size:1rem!important;box-sizing:border-box!important}
+
+[data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) select, [data-sidebar-right-panel] :is([class$="_toolbar"], [class*="_toolbar "]) :is([class$="_tool"], [class*="_tool "]){min-height:2.75rem!important;font-size:1rem!important}
+
+/* Терминал: кнопки строки статуса и нижняя безопасная зона. */
+[data-sidebar-terminal] :is([class$="_status"], [class*="_status "]) button{min-height:2.75rem!important}
+
+[data-sidebar-terminal]{padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+
+/* Скрытая настольная кнопка угла убрала единственный видимый вход в правую
+ * панель; после закрытия последней вкладки гид «Начало» было не вернуть без
+ * карточки в чате. Возвращаем только эту кнопку, остальные настольные действия
+ * в углу остаются скрытыми (см. `:is([class$="_headerCorner"], [class*="_headerCorner "])` выше).
+ */
+[class*="headerCorner"]:has([data-sidebar-right-expand]){display:flex!important;align-items:center!important}
+[class*="headerCorner"] button:not([data-sidebar-right-expand]){display:none!important}
+
+[data-sidebar-right-expand]{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important}
+
+[class*="headerUtilities"] button{width:2.75rem!important;height:2.75rem!important;min-width:2.75rem!important}
+
+[data-sidebar-right-panel] button[class*="_typeFilterButton"]{position:relative!important}
+
+[data-sidebar-right-panel] button[class*="_typeFilterButton"]::after, [data-sidebar-right-panel] button[class*="_disclosure"]::after{content:''!important;position:absolute!important;inset:-.85rem!important}
+

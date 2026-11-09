@@ -1,0 +1,15 @@
+/* ── 9. ПАНЕЛЬ REMOTE И СЛУЖЕБНЫЕ СТРОКИ ─────────────────────────────────────────
+ * Панель — наш клиентский плагин (`plugin/lib/client.js`), он рисует её
+ * встроенными стилями и общий с настольным приложением. На телефоне её ссылка
+ * «Открыть страницу подключения» — 15 px высотой, а строка «Дополнительно» и того
+ * меньше: палец по ним не попадает. Слой телефона правит только телефон.
+ * Строка «Продолжить в «…»» заменяет inline-стили в JS и держится над композером.
+ */
+
+#dshm-remote-panel summary{display:flex!important;align-items:center!important;min-height:2.75rem!important}
+
+#dshm-remote-panel a, #dshm-remote-panel button{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:2.75rem!important}
+
+/* Строка «Продолжить в «…»» вместо inline-стилей в JS. */
+.dshm-resume{position:fixed;z-index:45;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8.5rem);padding:.5rem .875rem;border-radius:999px;border:1px solid var(--dshm-line,rgba(255,255,255,.14));background:var(--dshm-raised,#26262a);color:var(--dshm-ink,#fff);font:inherit;font-size:.8125rem;cursor:pointer}
+

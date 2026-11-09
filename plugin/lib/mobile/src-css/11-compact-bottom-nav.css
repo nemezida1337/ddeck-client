@@ -1,0 +1,500 @@
+/* ── Компактная нижняя навигация левой панели ───────────────────────────────
+ * Верхние настольные строки скрываются JS-слоем; внизу одна строка иконок:
+ * аккаунт, автозадачи и «Ещё» (в нём плагины и подключение телефона).
+ */
+html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]) {
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+[data-dshm-footer-hidden] {
+  display: none !important;
+}
+
+.dshm-bottom-nav {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
+  z-index: 75 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  gap: 2px !important;
+  height: calc(3.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  box-sizing: border-box !important;
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+  border-top: 1px solid var(--dshm-line, rgba(255, 255, 255, .14)) !important;
+  background: var(--dshm-surface, #1b1b1c) !important;
+}
+
+.dshm-bottom-button {
+  width: 100% !important;
+  height: 3rem !important;
+  min-width: 0 !important;
+  min-height: 2.75rem !important;
+  padding: 4px 0 2px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  border: 0 !important;
+  border-radius: .65rem !important;
+  background: transparent !important;
+  color: inherit !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.dshm-bottom-label {
+  font-size: .625rem !important;
+  line-height: .75rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  color: currentColor !important;
+  opacity: .72 !important;
+  white-space: nowrap !important;
+}
+
+.dshm-bottom-button svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  opacity: .9 !important;
+}
+
+.dshm-more-scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 80 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.dshm-more-menu {
+  position: fixed !important;
+  left: .5rem !important;
+  bottom: calc(env(safe-area-inset-bottom) + 4rem) !important;
+  z-index: 90 !important;
+  width: min(18rem, calc(100vw - 1rem)) !important;
+  padding: .375rem !important;
+  box-sizing: border-box !important;
+  border: 1px solid #2b2d34 !important;
+  border-radius: .875rem !important;
+  background: #24262b !important;
+  color: #f5f6f8 !important;
+  box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .45) !important;
+}
+
+.dshm-more-item {
+  width: 100% !important;
+  min-height: 2.75rem !important;
+  padding: 0 .625rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: .625rem !important;
+  border: 0 !important;
+  border-radius: .55rem !important;
+  background: transparent !important;
+  color: inherit !important;
+  font: inherit !important;
+  text-align: left !important;
+}
+
+.dshm-more-item svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  flex: none !important;
+}
+
+.dshm-more-item:active {
+  background: rgba(255, 255, 255, .08) !important;
+}
+
+.dshm-phone-n {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dshm-phone-n b {
+  position: absolute !important;
+  top: -.35rem !important;
+  right: -.35rem !important;
+  font-size: .6rem !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+}
+
+/* Меню аккаунта — над нижней строкой иконок, а не в левом верхнем углу
+ * (родная кнопка аккаунта скрыта, и нативный портал теряет якорь). */
+[data-dshm-account-menu] {
+  top: auto !important;
+  left: .5rem !important;
+  bottom: calc(env(safe-area-inset-bottom) + 3.75rem) !important;
+  max-height: calc(100dvh - 5rem) !important;
+  overflow-y: auto !important;
+  z-index: 90 !important;
+}
+
+/* Анимации нижних меню: мягкий подъём, а не мгновенное появление. */
+@keyframes dshm-pop-in {
+  from { opacity: 0; transform: translateY(.5rem) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+.dshm-more-menu { animation: dshm-pop-in .18s cubic-bezier(.2,.8,.2,1) both; }
+.dshm-more-scrim { animation: dshm-fade-in .16s ease both; }
+[data-dshm-account-menu] { animation: dshm-pop-in .18s cubic-bezier(.2,.8,.2,1) both; }
+.dshm-pair-overlay { animation: dshm-fade-in .18s ease both; }
+.dshm-pair-card { animation: dshm-pop-in .22s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes dshm-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.dshm-bottom-button:active { transform: scale(.9); background: rgba(255,255,255,.08) !important; }
+
+/* Кнопка аккаунта должна читаться нажатой, пока открыто меню аккаунта. */
+.dshm-bottom-button[data-dshm-active],
+html:has([data-dshm-account-menu]:not([data-dshm-account-closed])) .dshm-bottom-nav .dshm-bottom-button:first-child,
+html[data-dshm-account-opening] .dshm-bottom-nav .dshm-bottom-button:first-child {
+  background: rgba(107, 138, 253, .20) !important;
+  color: #a9c0ff !important;
+}
+
+.dshm-bottom-button[data-dshm-active] svg,
+html:has([data-dshm-account-menu]:not([data-dshm-account-closed])) .dshm-bottom-nav .dshm-bottom-button:first-child svg,
+html[data-dshm-account-opening] .dshm-bottom-nav .dshm-bottom-button:first-child svg {
+  opacity: 1 !important;
+}
+.dshm-more-item { transition: background-color .15s ease; }
+
+/* Нативное меню аккаунта использует translucent material и на фоне длинного
+ * списка просвечивает; на телефоне делаем его плотной карточкой. */
+[data-dshm-account-menu] {
+  width: 11rem !important;
+  min-width: 10rem !important;
+  padding: .375rem !important;
+  border: 1px solid #2b2d34 !important;
+  border-radius: .875rem !important;
+  background: #24262b !important;
+  color: #f5f6f8 !important;
+  box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .45) !important;
+  backdrop-filter: none !important;
+}
+
+[data-dshm-account-menu] button,
+[data-dshm-account-menu] [role=menuitem] {
+  min-height: 2.75rem !important;
+  border-radius: .55rem !important;
+  color: #f5f6f8 !important;
+}
+
+[data-dshm-account-menu] button:active,
+[data-dshm-account-menu] [role=menuitem]:active {
+  background: rgba(255, 255, 255, .08) !important;
+}
+
+/* На полноэкранной правой панели плавающая кнопка меню перекрывает заголовок
+ * «Файлы/Терминал» и крестик закрытия. Прячем её, пока панель открыта. */
+html[data-dshm-right-open] .dshm-menu {
+  display: none !important;
+}
+
+/* На телефоне отдельный крестик вкладки наезжает на её заголовок: «Файлы»
+ * превращалось в «Файл…». Закрыть всю правую панель можно крестиком справа,
+ * поэтому крестик вкладки скрываем. */
+[data-sidebar-right-panel] [class*="_tabClose_"] {
+  display: none !important;
+}
+
+html[data-dshm-modal] .dshm-bottom-nav,
+html[data-dshm-modal] .dshm-menu {
+  display: none !important;
+}
+
+/* Пока открыт поиск, нижняя строка иконок не нужна: она забирает место у
+ * результатов и оказывается прямо над клавиатурой. */
+html[data-dshm-search-open] .dshm-bottom-nav {
+  display: none !important;
+}
+
+/* Панель должна появляться сразу, без повторной анимации при перерисовке. */
+.dshm-bottom-nav {
+  animation: none !important;
+}
+
+/* Иконки в шапке «Рабочие области» (поиск, параметры, добавить) приведены к
+ * одному пальцевому размеру 44 px; раньше настройки и плюс были 28×28. */
+:is([class$="_sectionHeader"], [class*="_sectionHeader "]) :is([class$="_iconButton"], [class*="_iconButton "]) {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-width: 2.75rem !important;
+  min-height: 2.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Три иконки в шапке рабочих областей при ширине 44 не помещаются в панель —
+ * плюс «Добавить» уезжает за край. Оставляем высоту 44 для пальца, ширину 36. */
+:is([class$="_sectionHeader"], [class*="_sectionHeader "]) :is([class$="_iconButton"], [class*="_iconButton "]) {
+  width: 2.25rem !important;
+  min-width: 2.25rem !important;
+}
+
+/* Правый край шапки «Рабочие области»: плюс «Добавить» не должен упираться
+ * в границу панели и выглядеть обрезанным. */
+:is([class$="_sectionHeader"], [class*="_sectionHeader "]) {
+  padding-right: .5rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Пока открыт поповер настроек/аккаунта, нижняя строка не должна
+ * просвечивать под ним и пересекаться с его нижним краем. */
+
+/* Нативный поиск по сессиям анимирует высоту через JS/CSS и на телефоне
+ * несколько раз блокирует главный поток. На телефоне открытие/закрытие поля
+ * должно быть мгновенным, без «догоняющей» анимации. */
+:is([class$="_search"], [class*="_search "]),
+:is([class$="_searchSlot"], [class*="_searchSlot "]),
+:is([class$="_sectionHeader"], [class*="_sectionHeader "]) {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* На телефоне нативная кнопка «Новая вкладка» была скрыта. Без неё из
+ * правой панели с открытым терминалом нельзя перейти к другому инструменту. */
+[data-dockkit-add-tab] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-width: 2.75rem !important;
+  min-height: 2.75rem !important;
+}
+
+/* Кнопка «Новая вкладка» у нативной правой панели живёт в конце
+ * горизонтального таб-стрипа и на телефоне оказывается за экраном.
+ * Поднимаем её в шапку, рядом с закрытием панели. */
+[data-dockkit-add-tab] {
+  position: fixed !important;
+  top: calc(env(safe-area-inset-top) + 2.75rem) !important;
+  right: 3.75rem !important;
+  z-index: 85 !important;
+  margin: 0 !important;
+  border-radius: .55rem !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Браузер в правой панели: адресная строка не помещалась рядом с шестью
+ * кнопками и уезжала под «Перейти». Делаем addressBox flex-контейнером:
+ * поле забирает свободную ширину, кнопка «Перейти» стоит после него. */
+[data-sidebar-right-panel] form[class*="toolbar"] [class*="addressBox"] {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 0 !important;
+}
+
+[data-sidebar-right-panel] form[class*="toolbar"] [class*="addressBox"] input {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+[data-sidebar-right-panel] form[class*="toolbar"] [class*="addressBox"] [class*="addressGo"] {
+  position: static !important;
+  flex: none !important;
+}
+
+/* «Новая вкладка» у правой панели: переносим из таб-стрипа в плавающую
+ * кнопку снизу справа, чтобы она не наезжала на заголовки вкладок. */
+[data-dockkit-add-tab] {
+  top: auto !important;
+  right: .75rem !important;
+  bottom: calc(env(safe-area-inset-bottom) + 4rem) !important;
+  background: #24262b !important;
+  border: 1px solid #2b2d34 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .4) !important;
+}
+
+/* Вкладки правой панели: крестик закрытия вернуть, но сделать вкладку
+ * достаточно широкой, чтобы заголовок и крестик не накладывались. */
+[data-sidebar-right-panel] [class*="_tabClose_"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.25rem !important;
+  height: 2.75rem !important;
+  min-width: 2.25rem !important;
+}
+
+[data-sidebar-right-panel] [class*="_tab_"] {
+  width: 8.75rem !important;
+  min-width: 8.75rem !important;
+  flex: none !important;
+}
+
+[data-sidebar-right-panel] [class*="_tabTitle_"] {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* Браузер: вторичные кнопки снимаем с мобильной строки, чтобы адресное поле
+ * получило нормальную ширину. */
+[data-sidebar-right-panel] button[aria-label="Открыть в системном браузере"],
+[data-sidebar-right-panel] button[aria-label="Выключить ограничения песочницы"] {
+  display: none !important;
+}
+
+/* Адресная строка браузера: плейсхолдер «Введите адрес HTTP(S)» должен
+ * помещаться целиком, без обрезки последних символов. */
+[data-sidebar-right-panel] form[class*="toolbar"] [class*="addressBox"] input {
+  font-size: .8rem !important;
+  padding-left: .5rem !important;
+  padding-right: .25rem !important;
+}
+
+/* Освобождаем ещё место адресной строке: «Обновить» доступно из самого
+ * браузера, а плейсхолдер должен быть читаемым. */
+[data-sidebar-right-panel] form[class*="toolbar"] button[aria-label="Обновить"] {
+  display: none !important;
+}
+
+/* Вкладки настроек DSH не должны обрезать активную подпись о правый край:
+ * чуть плотнее ячейки, чтобы первые три вкладки помещались на экране. */
+[role=dialog] [class*="_navCell"] {
+  padding-left: .5rem !important;
+  padding-right: .5rem !important;
+  font-size: .82rem !important;
+}
+
+/* Вторичные страницы (плагины, автозадачи) прокручиваются под статус-бар и
+ * плавающую кнопку меню. Когда страница сдвинута, верхний край маскируем. */
+.dshm-page-scrim {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: calc(env(safe-area-inset-top) + 3.75rem) !important;
+  z-index: 49 !important;
+  pointer-events: none !important;
+  opacity: 0;
+  transition: opacity .15s ease !important;
+  background: linear-gradient(#0f0f10 55%, rgba(15, 15, 16, 0)) !important;
+}
+
+html[data-dshm-page-scrolled] .dshm-page-scrim {
+  opacity: 1;
+}
+
+/* Пока меню аккаунта расставляется над нижней строкой, не показываем его
+ * в левом верхнем углу — иначе видно моргание. */
+html[data-dshm-account-opening] [role=menu] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Шапка «Рабочие области»: контейнер из двух иконок был шириной 60 px и
+ * обрезал правую половину кнопки «Добавить рабочую область». */
+:is([class$="_headerActions"], [class*="_headerActions "]) {
+  width: auto !important;
+  min-width: 4.75rem !important;
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+
+/* Прозрачный перехватчик: второе касание по кнопке аккаунта закрывает меню,
+ * даже если нативное меню поставило свой слой поверх нижней строки. */
+.dshm-account-scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 85 !important;
+  border: 0 !important;
+  background: transparent !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Слот поиска в шапке сжимался до 28 px и наезжал на настройки. Держим его
+ * шириной 44 px, как кнопку; настройки и папка остаются рядом. */
+:is([class$="_searchSlot"], [class*="_searchSlot "]) {
+  flex: 0 0 2.75rem !important;
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+  overflow: visible !important;
+}
+
+:is([class$="_searchButton"], [class*="_searchButton "]) {
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+}
+
+/* Слот поиска должен уметь расти при раскрытии, но не сжиматься меньше 44 px. */
+:is([class$="_searchSlot"], [class*="_searchSlot "]) {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 2.75rem !important;
+}
+
+/* Поле поиска в раскрытом слоте не должно сжиматься до 95 px. */
+:is([class$="_searchInput"], [class*="_searchInput "]) {
+  min-width: 6.5rem !important;
+}
+
+/* Минимальная ширина поля нужна только в раскрытом слоте. В закрытом
+ * состоянии поле остаётся 16 px и не держит data-dshm-search-open. */
+:is([class$="_searchInput"], [class*="_searchInput "]) {
+  min-width: 0 !important;
+}
+
+:is([class*="_searchSlotExpanded"]) :is([class$="_searchInput"], [class*="_searchInput "]) {
+  min-width: 6.5rem !important;
+}
+
+/* Кнопки «плюс» и панели композера не должны провоцировать клавиатуру. */
+html[data-dshm-subagent-readonly] :is([class$="_composerStack"], [class*="_composerStack "]) :is([class*="_add"], [class*="_trailing"], [class*="_primary"], [aria-label*="Отправить"], [aria-label*="Начать запись"], [aria-label*="Добавить файлы"], button[aria-label*="выполнить команды"]) {
+  display: none !important;
+}
+
+html[data-dshm-subagent-readonly] .dshm-tool,
+html[data-dshm-subagent-readonly] .dshm-dock-toggle {
+  display: none !important;
+}
+
+html[data-dshm-subagent-readonly] [data-dshm-readonly-frame] {
+  display: none !important;
+}
+
+.dshm-readonly-banner {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  margin: .5rem 1rem 1rem;
+  padding: .75rem .9rem;
+  border: 1px solid #343743;
+  border-radius: .875rem;
+  background: #1d1f25;
+  color: #b9becb;
+  font-size: .8125rem;
+  line-height: 1.4;
+}
+
+.dshm-readonly-banner strong {
+  color: #f3f5fa;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+/* Адресованный субагент: поле ввода не должно принимать текст и клавиатуру. */
+html[data-dshm-subagent-readonly] :is([class$="_composerStack"], [class*="_composerStack "]) :is([contenteditable="true"], [contenteditable="false"][data-dshm-readonly-editor]) {
+  pointer-events: none !important;
+  user-select: text !important;
+  opacity: .55 !important;
+}
+
+/* В адресованном субагенте оставляем только плашку, без мёртвого композера. */
+html[data-dshm-subagent-readonly] :is([class$="_composerStack"], [class*="_composerStack "]) {
+  display: none !important;
+}
+

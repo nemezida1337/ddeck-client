@@ -1,0 +1,380 @@
+/* ── 10. ПЕРЕОПРЕДЕЛЕНИЯ: ЛАНДШАФТ С ОТКРЫТОЙ КЛАВИАТУРОЙ ────────────────────────
+ * Замер: экран 800 × 360, клавиатура занимает 295 px — WebView остаётся 65 px.
+ * Композер с панелью инструментов и строкой статистики (160 px) уезжал за верхний
+ * край (y = −98), а заголовок диалога перекрывал поле ввода (elementFromPoint в
+ * центре редактора давал titleRow). Оставляем только строку ввода и отправку,
+ * заголовок и плавающее меню в этом состоянии убираем. Блок стоит последним: в
+ * коротком окне его правила должны уступать только более специфичным.
+ */
+
+@media (max-height:150px) and (orientation:landscape){
+
+  [class*="_composerStack"] :is([class$="_tools"], [class*="_tools "]), :is([data-composer-dock="true"], [data-dshm-composer-dock]){display:none!important}
+
+  [class*="_composerStack"] :is([class$="_trailing"], [class*="_trailing "]){position:absolute!important;right:.375rem!important;bottom:.125rem!important;width:auto!important}
+
+  [class*="_composerStack"] :is([class$="_trailing"], [class*="_trailing "]) > :not(:last-child){display:none!important}
+
+  [class*="_composerStack"] :is([class$="_scroll"], [class*="_scroll "]){padding-right:3.5rem!important}
+
+  /* У шапки чата бывает второй класс (headerSessionless), поэтому суффикс не
+     * работает — берём вхождение. Второй селектор повторяет более специфичное
+     * правило шапки из основного слоя: в коротком окне оно должно уступить. */
+  header[class*="_header"], header[class*="_header"]:has([data-conversation-header-leading]){display:none!important}
+
+  .dshm-menu{display:none!important}
+
+}
+
+/* Первый запуск: короткий брифинг, как пользоваться приложением и панелью. */
+.dshm-onboard{
+  position:fixed; inset:0; z-index:1300; display:flex; align-items:center; justify-content:center;
+  padding:1.25rem; box-sizing:border-box;
+  background:rgba(0,0,0,.62); backdrop-filter:blur(2px);
+  opacity:0; transition:opacity .22s ease;
+}
+.dshm-onboard[data-dshm-show="1"]{opacity:1}
+.dshm-onboard-card{
+  width:100%; max-width:21rem; box-sizing:border-box;
+  display:flex; flex-direction:column; gap:.75rem;
+  padding:1.25rem; border-radius:1.125rem;
+  border:1px solid var(--dshm-line,rgba(255,255,255,.16));
+  background:var(--dshm-surface,#16181c); color:var(--dshm-ink,#fff);
+  box-shadow:0 1.5rem 4rem rgba(0,0,0,.55);
+  transform:translateY(.75rem) scale(.98); transition:transform .22s cubic-bezier(.16,1,.3,1);
+}
+.dshm-onboard[data-dshm-show="1"] .dshm-onboard-card{transform:none}
+.dshm-onboard-icon{font-size:1.75rem; line-height:1}
+.dshm-onboard-title{font-size:1.125rem; font-weight:600; line-height:1.25}
+.dshm-onboard-text{font-size:.875rem; line-height:1.45; opacity:.82; margin:0}
+.dshm-onboard-foot{display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:.25rem}
+.dshm-onboard-dots{display:flex; gap:.3rem}
+.dshm-onboard-dot{width:.4rem; height:.4rem; border-radius:999px; background:rgba(255,255,255,.22)}
+.dshm-onboard-dot[data-dshm-active="1"]{background:var(--dshm-accent,#6b8afd)}
+.dshm-onboard-actions{display:flex; gap:.5rem}
+.dshm-onboard-skip,.dshm-onboard-next{
+  min-height:2.75rem; padding:0 .875rem; border-radius:.75rem; font:inherit; font-size:.875rem; cursor:pointer;
+}
+.dshm-onboard-skip{border:0;background:transparent;color:var(--dshm-muted,rgba(255,255,255,.7))}
+.dshm-onboard-next{border:0;background:var(--dshm-accent,#6b8afd);color:#fff;font-weight:600}
+.dshm-grid-info{
+  width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;
+  border:0;border-radius:.75rem;background:transparent;color:var(--dshm-ink,#fff);
+  font:inherit;font-size:1rem;cursor:pointer;
+}
+
+/* Уважение к системной настройке «уменьшить движение». */
+@media (prefers-reduced-motion: reduce){
+  .dshm-tool,.dshm-grid-cell,.dshm-sheet-close,.dshm-menu,.dshm-collapse,
+  .dshm-grid,.dshm-grid-scrim,.dshm-dock-hint,.dshm-tip{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+
+/* Планшет/ландшафт: та же мобильная панель, но с комфортной шириной.
+ * Телефонные правила не меняются; на широком экране ящик не занимает половину
+ * дисплея, сетка инструментов не растягивается на всю ширину, а брифинг не
+ * выглядит узкой телефонной карточкой. */
+@media (min-width: 680px){
+  html:not([data-dshm-native-sidebar]) :is([class$="_sidebarCol"], [class*="_sidebarCol "]){width:min(21rem,42vw)!important}
+  .dshm-grid{max-width:42rem;margin-inline:auto}
+  .dshm-grid-cells{grid-template-columns:repeat(auto-fill,minmax(6.25rem,1fr))}
+  .dshm-onboard-card{max-width:24rem}
+}
+
+/* Правая панель на телефоне не должна делить экран на две колонки.
+ *
+ * Dockkit рисует вкладки панели как grid из нескольких `_tabCell_`, и при двух
+ * открытых вкладках (например, «Начало» и разговор субагента) на телефоне
+ * получались две колонки по 180 px: чат сжимался в вертикальную полоску.
+ * На узком экране оставляем только активную вкладку на всю ширину.
+ */
+@media (max-width: 600px){
+  [data-sidebar-right-panel] [class*="_tabLayout_"]{grid-template-columns:1fr!important}
+  [data-sidebar-right-panel] [class*="_tabCell_"]{display:none!important}
+  [data-sidebar-right-panel] [class*="_tabCell_"]:has([data-dockkit-pane-active="true"]){display:block!important;width:100%!important}
+}
+
+
+/* «Открыть в Finder» и меню способов открытия — настольные действия в шапке.
+ * На телефоне они не нужны и занимали место справа от названия сессии; у
+ * пользователя это выглядело как лишняя кнопка «Fider Terminal». Прячем весь
+ * блок утилит; вход в правую панель живёт в headerCorner и остаётся. */
+:is([class$="_headerUtilities"], [class*="_headerUtilities "]){display:none!important}
+
+/* Поле поиска по сессиям в мобильной боковой панели.
+ *
+ * Полная подсказка «Поиск по названиям сессий» обрезается между иконкой и
+ * крестиком; JS заменяет её на «Поиск сессий». Крестик в клиенте — 24 px, и
+ * промах по нему попадает в подложку, закрывающую всю панель. Даём ему
+ * полноценные 44 px и невидимую область нажатия вокруг.
+ */
+[class*="_searchSlot"] [class*="_clearButton"],
+button[aria-label="Очистить поиск"],
+button[aria-label="Clear search"] {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-width: 2.75rem !important;
+  min-height: 2.75rem !important;
+  position: relative !important;
+  z-index: 5 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+[class*="_searchSlot"] [class*="_clearButton"]::after,
+button[aria-label="Очистить поиск"]::after,
+button[aria-label="Clear search"]::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: -.5rem !important;
+  border-radius: 50% !important;
+}
+
+/* DDeck plugin manager — настольная точка входа; на телефоне её заменяет
+ * отдельный сценарий подключения второго телефона. */
+[class*="_footerActions"] button[aria-label="DDeck"] {
+  display: none !important;
+}
+
+/* Второй телефон: строка в боковой панели и парольный диалог.
+ * Пароль задаётся на компьютере; телефон только вводит его и показывает
+ * одноразовый QR. Диалог перекрывает страницу, поле — 16 px, чтобы Android
+ * не приближал экран при фокусе.
+ */
+.dshm-pair-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  background: rgba(0, 0, 0, .68) !important;
+  color: #f5f6f8 !important;
+}
+
+.dshm-pair-card {
+  width: 100% !important;
+  max-width: 22rem !important;
+  max-height: calc(100% - 2rem) !important;
+  overflow: auto !important;
+  box-sizing: border-box !important;
+  padding: 1rem !important;
+  border: 1px solid #2b2d34 !important;
+  border-radius: 1rem !important;
+  background: #1b1b1c !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .75rem !important;
+}
+
+.dshm-pair-title { font-weight: 650 !important; font-size: 1.05rem !important; }
+.dshm-pair-note { opacity: .72 !important; font-size: .875rem !important; line-height: 1.45 !important; }
+.dshm-pair-error { min-height: 1.2em !important; color: #ff9b9b !important; font-size: .875rem !important; }
+
+.dshm-pair-input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  height: 2.75rem !important;
+  padding: 0 .75rem !important;
+  border: 1px solid #2b2d34 !important;
+  border-radius: .5rem !important;
+  background: #12151c !important;
+  color: #f5f6f8 !important;
+  font: inherit !important;
+  font-size: 1rem !important;
+}
+
+.dshm-pair-submit, .dshm-pair-cancel {
+  min-height: 2.75rem !important;
+  padding: 0 .75rem !important;
+  border-radius: .5rem !important;
+  font: inherit !important;
+  cursor: pointer !important;
+}
+
+.dshm-pair-submit { border: 1px solid #6b8afd !important; background: #6b8afd !important; color: #fff !important; }
+.dshm-pair-cancel { border: 1px solid #3a3d46 !important; background: transparent !important; color: #f5f6f8 !important; }
+.dshm-pair-submit:disabled { opacity: .55 !important; }
+
+.dshm-pair-qr { align-self: center; width: min(16rem, 70vw); background: #fff; border-radius: .75rem; padding: .5rem; line-height: 0; }
+.dshm-pair-qr svg { display: block; width: 100%; height: auto; }
+.dshm-pair-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.35rem; letter-spacing: .18em; text-align: center; }
+
+/* Поиск по сессиям и клавиатура.
+ *
+ * Когда открывается клавиатура, высота вьюпорта падает с 800 до ~420 px.
+ * Верхние строки панели и футер имеют фиксированную высоту, и `regionArea`
+ * схлопывался в 0: поле поиска оставалось в DOM, но полностью обрезалось, а
+ * экран показывал только «Плагины / Автоматические задачи / Ещё / футер».
+ * Даём области минимальную высоту и разрешаем прокрутку самой панели; поле
+ * поиска и его обёртки растягиваем на 44 px, иначе input (44) обрезался
+ * обёрткой (30).
+ */
+:has(> [class*="_regionArea"]) {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+[class*="_regionArea"] {
+  min-height: 10rem !important;
+  flex: 0 0 auto !important;
+}
+
+:is([class$="_search"], [class*="_search "]) {
+  height: 2.75rem !important;
+  min-height: 2.75rem !important;
+  overflow: visible !important;
+  transition: height .16s ease, min-height .16s ease !important;
+}
+
+:is([class$="_searchSlot"], [class*="_searchSlot "]) {
+  height: 2.75rem !important;
+  min-height: 2.75rem !important;
+}
+
+:is([class$="_sectionHeader"], [class*="_sectionHeader "]) {
+  height: auto !important;
+  min-height: 2.75rem !important;
+  overflow: visible !important;
+}
+
+/* Модалки не должны уходить под системную навигацию Android. */
+[role=dialog] {
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem) !important;
+  margin-bottom: env(safe-area-inset-bottom) !important;
+}
+
+/* Поповер настроек рабочих областей прижат к низу окна и уходил под
+ * трёхкнопочную навигацию Android. Поднимаем его над системной панелью;
+ * содержимое при необходимости прокручивается. */
+[role=menu][class*="_viewOptionsMenu"] {
+  bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  max-height: calc(100dvh - 3.25rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  overflow-y: auto !important;
+}
+
+/* Шеврон дока живёт в строке композера рядом с микрофоном и нативными
+ * кнопками, а не внутри самого дока: док можно свернуть, шеврон остаётся на
+ * месте и разворачивает его обратно. Направление стрелки — как у нативных
+ * меню: вверх, когда док открыт, вниз, когда свёрнут. */
+.dshm-dock-toggle {
+  position: static !important;
+  right: auto !important;
+  flex: 0 0 auto !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-width: 2.75rem !important;
+  min-height: 2.75rem !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 0 !important;
+  border-radius: .65rem !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.dshm-dock-toggle svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  opacity: .86 !important;
+  transition: transform .18s ease !important;
+  transform: rotate(180deg) !important;
+}
+
+html[data-dshm-dock-collapsed="1"] .dshm-dock-toggle svg {
+  transform: rotate(0deg) !important;
+}
+
+html[data-dshm-dock-collapsed="1"] :is([data-composer-dock="true"], [data-dshm-composer-dock]) {
+  display: none !important;
+}
+
+
+
+/* Шеврон дока — как нативные кнопки композера: иконка + маленькая стрелка,
+ * а не одинокая стрелка. Стрелка поворачивается отдельно. */
+.dshm-dock-toggle {
+  width: auto !important;
+  min-width: 3.5rem !important;
+  padding: 0 .375rem !important;
+  gap: .125rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dshm-dock-toggle-icon,
+.dshm-dock-toggle-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.dshm-dock-toggle-icon svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  opacity: .86 !important;
+  transform: none !important;
+}
+
+.dshm-dock-toggle-arrow svg {
+  width: .75rem !important;
+  height: .75rem !important;
+  opacity: .7 !important;
+  transition: transform .18s ease !important;
+  transform: rotate(180deg) !important;
+}
+
+html[data-dshm-dock-collapsed="1"] .dshm-dock-toggle-arrow svg {
+  transform: rotate(0deg) !important;
+}
+
+/* Компактная ширина как у нативной кнопки модели: иконка + маленький шеврон.
+ * Если сделать кнопку шире, `trailing` перестаёт помещаться рядом с плюсом и
+ * щитом, композер переносит строку и занимает лишние 56 px по высоте. */
+.dshm-dock-toggle {
+  width: 2.875rem !important;
+  min-width: 2.875rem !important;
+  max-width: 2.875rem !important;
+  padding: 0 .25rem !important;
+  gap: 0 !important;
+}
+
+.dshm-dock-toggle-icon svg {
+  width: .875rem !important;
+  height: .875rem !important;
+}
+
+.dshm-dock-toggle-arrow svg {
+  width: .5rem !important;
+  height: .5rem !important;
+}
+
+/* Generic `[class*="_composerStack"] button::after` расширяет зону нажатия у
+ * всех кнопок на -6 px; у нашей составной кнопки этот псевдоэлемент
+ * растягивался на весь композер и перехватывал все касания. Отключаем его
+ * только у шеврона. */
+.dshm-dock-toggle::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Композер должен оставаться в одну строку: чуть уменьшаем зазор trailing и
+ * ширину шеврона, чтобы плюс/щит и model/toggle/mic/send поместились рядом. */
+[class*="_composerStack"] :is([class*="_trailing"]) {
+  gap: .375rem !important;
+}
+
+.dshm-dock-toggle {
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+  max-width: 2.75rem !important;
+}
+
