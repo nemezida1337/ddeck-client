@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Политика сетевой безопасности для release-сборки: открытый HTTP запрещён
+  везде.
+
+  Компьютер с DSH доступен по TLS, а сертификат шлюза закрепляется при
+  сопряжении, поэтому исключений для release нет. Исключение для loopback
+  (127.0.0.1, 10.0.2.2, localhost) нужно только фикстуре шлюза на машине
+  разработчика и живёт в debug-наборе ресурсов — см.
+  app/src/debug/res/xml/network_security_config.xml.
+-->
+<network-security-config>
+  <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

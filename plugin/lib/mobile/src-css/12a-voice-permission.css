@@ -1,0 +1,66 @@
+/* ── Голосовой ввод: лист разрешения на микрофон ─────────────────────────────
+ * Пока RECORD_AUDIO не выдан, DSH рисует свой текст и молча ждёт. Наш лист
+ * объясняет это одним экраном и даёт либо системный запрос, либо настройки.
+ */
+.dshm-voice-scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 130 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 1rem) !important;
+  background: rgba(0, 0, 0, .55) !important;
+}
+
+.dshm-voice-card {
+  width: calc(100% - 2rem) !important;
+  max-width: 26rem !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: .6rem !important;
+  padding: 1rem !important;
+  border-radius: 1rem !important;
+  background: var(--dshm-surface, #1b1b1c) !important;
+  color: var(--dshm-ink, #f9fafb) !important;
+  border: 1px solid var(--dshm-line, rgba(255, 255, 255, .14)) !important;
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .45) !important;
+  animation: dshm-pop-in .18s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.dshm-voice-card strong {
+  font-size: 1rem !important;
+  line-height: 1.35 !important;
+}
+
+.dshm-voice-card p {
+  margin: 0 !important;
+  font-size: .875rem !important;
+  line-height: 1.45 !important;
+  opacity: .78 !important;
+}
+
+.dshm-voice-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: .5rem !important;
+  margin-top: .25rem !important;
+}
+
+.dshm-voice-actions button {
+  min-height: 2.75rem !important;
+  padding: 0 1rem !important;
+  border-radius: .75rem !important;
+  border: 1px solid var(--dshm-line, rgba(255, 255, 255, .14)) !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: .9375rem !important;
+}
+
+.dshm-voice-actions .dshm-voice-open {
+  background: #6b8afd !important;
+  border-color: #6b8afd !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}

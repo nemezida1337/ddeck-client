@@ -1,0 +1,79 @@
+/* ── 5. КАРТОЧКА ВОПРОСА АГЕНТА И PLAN REVIEW ────────────────────────────────────
+ * Без штатного мобильного слоя карточка приходит в настольной вёрстке: замер на
+ * телефоне — сама карточка 353 × 496, но опции уезжают выше её края (y = 223 при
+ * верхней границе 256), кнопки «Пропустить»/«Отправить» выходят за правый край
+ * (x = 158…366 при ширине 353), шапка вопроса обрезана. Карточка — во всю ширину,
+ * шапка видна, список опций прокручивается отдельно, кнопки — двумя колонками по
+ * 44 px. У plan review разметка другая (полоса шапки, сводка и подвал — три div без
+ * атрибутов), поэтому его раскладка описана отдельно. Компонент штатного плагина
+ * `dsh-mobile-question-fixes` тоже одевает карточку — его правки перебиваются
+ * точечно, специфичностью выше.
+ */
+
+[data-question-key],[data-plan-review-key]{box-sizing:border-box!important;width:100%!important;height:auto!important;min-width:0!important;flex:none!important;align-self:flex-end!important;padding:6px max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right))!important}
+
+[data-question-key]>section,[data-plan-review-key]>section{width:100%!important;height:auto!important;min-height:0!important;max-width:none!important;max-height:min(68dvh,520px)!important;border-radius:16px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+
+/* Шапка и подвал карточки — фиксированной высоты, середина прокручивается.
+ * Замер: без этого секция 520 px содержала 127 + 385 + 98 = 610 px и уезжала
+ * внутрь себя — кнопки «Пропустить»/«Отправить» оказывались за нижним краем. */
+[data-question-key]>section>header, [data-question-key]>section>footer{flex:0 0 auto!important}
+
+/* У карточки вопроса тело помечено data-question-scroll. У plan review разметка
+ * другая: полоса шапки, сводка и подвал — три div без атрибутов. Поэтому общее
+ * правило сужено до вопроса, а plan review получает свою раскладку ниже. */
+[data-question-key]>section>div{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:auto!important}
+
+[data-question-scroll]{overscroll-behavior:contain;scroll-padding-bottom:12px}
+
+/* У plan review ровно три div: полоса, сводка, подвал. Сводка не прокручивается
+ * (заголовок и двухстрочный абзац с обрезкой), поэтому ничего не растягиваем и не
+ * скроллим — только держим подвал целиком в карточке. */
+[data-plan-review-key]>section>div{flex:0 0 auto!important}
+
+[data-question-key]>section>header{display:flex!important;visibility:visible!important;flex:none!important;gap:8px!important;padding:12px 8px 4px 14px!important}
+
+[data-question-key]>section>header h2{min-width:0!important;overflow-wrap:anywhere!important;font-size:1rem!important;line-height:1.4!important}
+
+[data-question-key]>section>header button{min-width:2.5rem!important;min-height:2.5rem!important}
+
+[data-question-key] [role=radio],[data-question-key] [role=checkbox]{min-height:3rem!important;touch-action:manipulation}
+
+[data-question-key]>section>footer{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center!important;flex:none!important;gap:6px 8px!important;margin-top:4px!important;padding:6px 10px 10px!important}
+
+[data-question-key]>section>footer>:last-child{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+
+[data-question-key]>section>footer>:last-child button{width:100%!important;min-height:2.75rem!important}
+
+[data-plan-review-key]>section>div:last-child{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding:8px 12px 10px!important}
+
+[data-plan-review-key]>section>div:last-child>div:last-child{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+
+/* Первую (outline) не растягиваем на всю строку: в разметке порядок «Запросить
+ * изменения» → «Подтвердить», и полноширинная outline-кнопка оставляла primary
+ * полклетки. Две равные колонки, primary справа. */
+[data-plan-review-key]>section>div:last-child>div:last-child>button{width:100%!important;min-height:2.75rem!important}
+
+[data-plan-review-key]>section>div:last-child button{width:100%!important;min-height:2.75rem!important}
+
+/* Компонент штатного плагина `dsh-mobile-question-fixes` тоже одевает карточку
+ * вопроса — но по-своему: он делает прокручиваемой всю секцию, а тело карточки
+ * оставляет фиксированным. На нашей странице это значит, что кнопки
+ * «Пропустить»/«Отправить» уезжают ниже видимой части, и человек их не видит.
+ * Перебиваем его точечно (у его правил !important, поэтому берём специфичностью
+ * выше): шапка и подвал фиксированы, прокручивается только список опций.
+ */
+html[data-dshm-theme] [data-question-key] > section:has(> [data-question-scroll]){display:flex!important;flex-direction:column!important;overflow:hidden!important}
+
+html[data-dshm-theme] [data-question-key] > section > div[data-question-scroll]{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+
+html[data-dshm-theme] [data-question-key] > section > header, html[data-dshm-theme] [data-question-key] > section > footer{flex:0 0 auto!important}
+
+/* Ссылка «Открыть план целиком» в полосе plan review: 169×40, до 44 не хватает
+ * двух пикселей с каждой стороны — расширяем зону нажатия, не двигая полосу. */
+:is([class$="_reviewLink"], [class*="_reviewLink "]){position:relative!important}
+
+:is([class$="_reviewLink"], [class*="_reviewLink "])::after{content:'';position:absolute;inset:-.125rem -.25rem}
+
+[data-question-key] :is([class$="_pager"], [class*="_pager "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+

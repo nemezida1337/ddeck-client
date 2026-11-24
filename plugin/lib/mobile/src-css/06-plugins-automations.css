@@ -1,0 +1,124 @@
+/* ── 6. ПЛАГИНЫ И АВТОЗАДАЧИ: ЗАГОЛОВКИ, ДЕТАЛИ, МЕЛКИЕ ЦЕЛИ ─────────────────────
+ * Вторичные экраны (плагины, автозадачи) начинались с самого верха: заголовок
+ * «Плагины» в точке 24,28 — под системной строкой и под нашей кнопкой меню. Им
+ * нужна безопасная зона и место слева под меню. Аудит нашёл на телефоне цели
+ * высотой 20–24 px: подпись карточки плагина («Открыть Субагент» 60 × 20),
+ * переключатель плагина (36 × 20), кнопка «О плагинах» (20 × 20) и поле поиска
+ * задач (260 × 24 при обёртке 36). Ниже зона нажатия доведена до 44 px; где можно —
+ * псевдоэлементом, чтобы вид и вёрстка не менялись. В конце секции — общие
+ * правила для тулбаров и полей страниц.
+ */
+
+/* Вторичные экраны (плагины, автозадачи, настройки) начинались с самого верха:
+ * замер показал заголовок «Плагины» в точке 24,28 — под системной строкой и под нашей
+ * кнопкой меню. Им тоже нужна безопасная зона и место слева под меню.
+ */
+:is([class$="_pageHeading"], [class*="_pageHeading "]){padding-top:calc(env(safe-area-inset-top) + .5rem)!important;padding-left:3.25rem!important;box-sizing:border-box!important}
+
+/* Страница плагина (детальный экран).
+ *
+ * Замер: кнопка «К списку плагинов» — 312 × 15 в точке y = 28, то есть в полосе
+ * системной строки (37 px): касание забирает система, а сама цель в четыре раза
+ * ниже пальцевого минимума. Верх детального экрана получает безопасную зону,
+ * зона нажатия крошек растёт псевдоэлементом без сдвига вёрстки.
+ */
+:is([class$="_detailTop"], [class*="_detailTop "]){padding-top:calc(env(safe-area-inset-top) + .25rem)!important;padding-left:3.25rem!important;box-sizing:border-box!important}
+
+:is([class$="_detailTop"], [class*="_detailTop "]) :is([class$="_crumb"], [class*="_crumb "]){position:relative!important}
+
+:is([class$="_detailTop"], [class*="_detailTop "]) :is([class$="_crumb"], [class*="_crumb "])::after{content:'';position:absolute;inset:-.9375rem -.5rem}
+
+/* Угол шапки — настольные кнопки: правый ящик, новая вкладка, разделить, полный экран.
+ * На телефоне они занимали место справа от названия сессии и ловили нажатия.
+ * Замер: «Открыть правую боковую панель» стояла в точке 320,11 при экране 360.
+ */
+:is([class$="_headerCorner"], [class*="_headerCorner "]){display:none!important}
+
+/* Карточки плагинов. Заголовок — кнопка 20 px внутри карточки, которую
+ * целиком открывает `::after` самой кнопки; собственный прямоугольник всё
+ * равно должен быть взрослым, потому что в него целятся и с клавиатуры, и
+ * вспомогательными технологиями. padding + отрицательный margin дают 44 px
+ * без роста карточки: замер после правки — карточка та же, заголовок на месте.
+ * Привязка к `_cardLink`: класс `_cardOpen` есть ещё у карточки плана и у
+ * карточки создания расписания, и им такой высоты не нужно.
+ */
+:is([class$="_cardLink"], [class*="_cardLink "]) :is([class$="_cardOpen"], [class*="_cardOpen "]){display:inline-flex!important;align-items:center!important;box-sizing:border-box!important;min-height:2.75rem!important;padding-block:.75rem!important;margin-block:-.75rem!important}
+
+/* «О плагинах» — круглая кнопка сведений в заголовке страницы. */
+:is([class$="_infoButton"], [class*="_infoButton "]){position:relative!important}
+
+:is([class$="_infoButton"], [class*="_infoButton "])::after{content:'';position:absolute;inset:-.75rem}
+
+/* Переключатель включения плагина: 36 × 20. В сторону расширяем мало — рядом
+ * край карточки, — но и 44 px по высоте достаточно, чтобы не прицеливаться.
+ * Класс у переключателя статический (`_switch_<hash>_<line>`), поэтому опора —
+ * роль, которую он и так объявляет вспомогательным технологиям.
+ */
+[role="switch"]{position:relative!important}
+
+[role="switch"]::after{content:'';position:absolute;inset:-.75rem -.25rem}
+
+/* Поле поиска задач на странице «Автоматические задачи».
+ *
+ * Замер: обёртка `.searchField` 36 px, поле ввода внутри — 24. Для пальца это
+ * мелко, а курсор в поле ввода ещё и 14 px шрифтом просит приближения на
+ * Android. Поднимаем поле до 44 и шрифт до 16; область прокрутки страницы —
+ * `_listPane`, чтобы не задеть одноимённое поле в справке по клавишам.
+ */
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]){height:2.75rem!important;box-sizing:border-box!important}
+
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) > :first-child{height:100%!important}
+
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) input{height:100%!important;font-size:1rem!important;line-height:1.4!important}
+
+/* Кнопка очистки внутри поля — 28 px и прижата вправо; поднимаем до 44. */
+:is([class$="_listPane"], [class*="_listPane "]) :is([class$="_searchField"], [class*="_searchField "]) button{width:2.75rem!important;height:2.75rem!important;margin-right:0!important}
+
+/* Детали автозадачи: полоса вкладок «Правила»/«Записи» и кнопки «Связанная
+ * сессия», «Действия», «Закрыть подробности» (28×28) лежали на y = 8…15 — в зоне
+ * системной строки (37 px): часы печатались поверх вкладок, а закрытие касанием
+ * не срабатывало. Полоса получает безопасную зону, отступ слева под плавающее
+ * меню и переносится на две строки, чтобы три кнопки получили по 44 px.
+ */
+:is([class$="_detailTabsBar"], [class*="_detailTabsBar "]){padding-top:calc(env(safe-area-inset-top) + .25rem)!important;padding-left:3.25rem!important;padding-right:.5rem!important;padding-bottom:.25rem!important;height:auto!important;min-height:calc(2.75rem + env(safe-area-inset-top))!important;box-sizing:border-box!important;flex-wrap:wrap!important;align-items:center!important;gap:.25rem!important}
+
+[class*="_detailTabsBar"] button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+[class*="_detailTab"]{min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+/* Список компонентов на детали плагина: строка 308 px делилась на иконку 41,
+ * описание 116, статус 68 и тумблер 36 — описанию оставалось 116 px, и оно
+ * переносилось по 1–2 слова. Разрешаем перенос: иконка и описание занимают первую
+ * строку, статус и тумблер уходят на следующую.
+ */
+:is([class$="_rowLine"], [class*="_rowLine "]){flex-wrap:wrap!important}
+
+:is([class$="_rowMain"], [class*="_rowMain "]){flex:1 1 calc(100% - 57px)!important;min-width:0!important}
+
+:is([class$="_rowLine"], [class*="_rowLine "]) :is([class$="_rowState"], [class*="_rowState "]){margin-left:calc(41px + 1rem)!important}
+
+:is([class$="_moreBack"], [class*="_moreBack "]){min-height:2.75rem!important}
+
+/* Автозадачи и плагины: кнопки создания/добавления/фильтров 28–32 px. */
+:is([class$="_addPrimary"], [class*="_addPrimary "]),:is([class$="_addMore"], [class*="_addMore "]),:is([class$="_groupMore"], [class*="_groupMore "]){min-height:2.75rem!important}
+
+[class*="_filterTab"]{min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+/* Детали плагина/задачи: поля ввода. */
+:is([class$="_detail"], [class*="_detail "]) :is(input,select,textarea){min-height:2.75rem!important;font-size:1rem!important}
+
+:is([class$="_guideToggle"], [class*="_guideToggle "]),:is([class$="_registryToggle"], [class*="_registryToggle "]),:is([class$="_registryOption"], [class*="_registryOption "]){min-height:2.75rem!important;display:inline-flex!important;align-items:center!important}
+
+:is([class$="_registryOption"], [class*="_registryOption "]) [role=radio],:is([class$="_registryOption"], [class*="_registryOption "]) input[type=radio]{min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_pageIntro"], [class*="_pageIntro "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_toolbar"], [class*="_toolbar "]) button{min-width:2.75rem!important;min-height:2.75rem!important}
+
+/* Инструменты просмотра diff и селектор файла: 28 px. */
+:is([class$="_tool"], [class*="_tool "]){min-width:2.75rem!important;min-height:2.75rem!important}
+
+:is([class$="_selectorButton"], [class*="_selectorButton "]){min-height:2.75rem!important}
+
+:is([class$="_toolbar"], [class*="_toolbar "]) input,:is([class$="_toolbar"], [class*="_toolbar "]) select{min-height:2.75rem!important;font-size:1rem!important}
+

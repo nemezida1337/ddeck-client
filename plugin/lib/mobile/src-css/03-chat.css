@@ -1,0 +1,85 @@
+/* ── 3. ЧАТ: ШАПКА И ЛЕНТА СООБЩЕНИЙ ─────────────────────────────────────────────
+ * Шапка может адресоваться только шапке чата: признак, который есть только у неё,
+ * публикует сам клиент — `data-conversation-header-leading` на ведущем блоке (он же
+ * используется для перетаскивания окна). Без этой привязки правило накрывало все
+ * шестнадцать компонентов с собственным `.header` — от полосы очереди до шапок
+ * диалогов. Название сессии занимает две строки: полное имя требует 311 px при
+ * доступных 203, а порог в 203 px давал не заголовок, а его начало.
+ */
+
+/* Шапка начиналась с y = 0, то есть под системной строкой: замер показал
+ * `header` 0,0 360x76 при безопасной зоне 37. Название сессии уезжало под часы,
+ * а кнопка меню ложилась поверх заголовка. Теперь это обычная мобильная шапка:
+ * безопасная зона сверху, фиксированная высота, место слева под кнопку.
+ *
+ * Правило адресуется ОДНОЙ шапке — шапке чата, и только ей.
+ *
+ * Раньше здесь стоял `:is([class$="_header"], [class*="_header "])` без привязки, и под него попадали все
+ * шестнадцать компонентов интерфейса, у которых есть собственный `.header`:
+ * заголовок полосы очереди (36 px → 89), шапка настроек (54 → 89), заголовки
+ * блоков вызова инструментов в переписке, заголовок списка файлов, шапки
+ * диалогов выбора каталога, входа в учётную запись и справки по горячим
+ * клавишам. Каждый из них получал 37 px мёртвого отступа сверху и высоту 89 px.
+ * Признак, который есть только у шапки чата, публикует сам клиент:
+ * `data-conversation-header-leading` на ведущем блоке (он же используется для
+ * перетаскивания окна). У пустой сессии заголовка нет, но ведущий блок есть —
+ * проверка селектора на живой странице это подтвердила.
+ */
+/* Шапка приложения (ConversationHeader) всегда помечена data-window-drag; это
+ * стабильный признак, в отличие от :has(leading) и вариантов blank/sessionless,
+ * которые клиент меняет по состоянию. Безопасная зона и высота задаются один раз
+ * для всех состояний шапки, чтобы при загрузке сессии она не «прыгала». */
+header[data-window-drag]:has([data-conversation-header-leading]){padding-top:calc(env(safe-area-inset-top) + .625rem)!important;height:calc(3.375rem + env(safe-area-inset-top))!important;box-sizing:border-box!important}
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]){display:flex!important;align-items:center!important}
+
+/* Заголовок сессии должен занимать оставшееся место.
+ *
+ * Замер показал: `titleCluster` — 0 px, `crumb` — 16 px, то есть название было сжато
+ * до невидимости, и в шапке оставались только иконки. Шапка — flex, поэтому заголовку
+ * нужно разрешить расти и обрезать длинное имя многоточием, а не сжимать в ноль.
+ *
+ * Область правила — та же шапка чата: `_titleRow` есть ещё и в карточках плагинов, и
+ * без привязки отступ 52 px сдвигал каждую карточку вправо и обрезал её хвост.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_titleRow"], [class*="_titleRow "]){padding-left:3.25rem!important;padding-right:.25rem!important;flex:1 1 auto!important;min-width:0!important;height:100%!important;align-items:center!important;overflow:hidden!important}
+
+/* Название сессии — двумя строками.
+ *
+ * Замер на «Связь десктопа с мобильным приложением»: полное имя требует 311 px,
+ * а на строку оставалось 203 — обрезалось до 65 %. Порог в 203 px давал не
+ * заголовок, а его начало. Две строки по 14 px занимают 40 px при высоте шапки
+ * 52 px (89 — вместе с безопасной зоной), поэтому полное имя помещается без
+ * роста шапки и без наезда на что-либо. Длинные имена, которые не влезают и в
+ * две строки, по-прежнему обрезаются многоточием.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_titleCluster"], [class*="_titleCluster "]){flex:1 1 auto!important;min-width:0!important;max-width:none!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbs"], [class*="_crumbs "]){flex:1 1 auto!important;min-width:0!important;overflow:visible!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbSeg"], [class*="_crumbSeg "]){flex:1 1 auto!important;min-width:0!important}
+
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumb"], [class*="_crumb "]), header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_crumbCurrent"], [class*="_crumbCurrent "]){max-width:100%!important;overflow:hidden!important;white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;text-overflow:ellipsis!important;line-height:1.2!important;max-height:2.4em!important;word-break:break-word!important}
+
+/* Режим и вкладки — настольные понятия: «Standard mode» и вкладки «Chat»/«Trajectory»
+ * занимали вторую строку и вытесняли переписку. Вкладка одна, режим не выбирают.
+ *
+ * Скрываем их ТОЛЬКО в шапке чата. Без привязки правило накрывало ещё два нужных
+ * места: шапку карточки вопроса (кнопки «свернуть», «закрыть» и «Взять время» при
+ * обратном отсчёте) и шапку списка сессий («Добавить рабочую область» и фильтры).
+ * Замер: именно эти группы пропадали на телефоне; с привязкой к шапке чата
+ * (data-conversation-header-leading) они остаются.
+ */
+header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_headerActions"], [class*="_headerActions "]), header:is([class$="_header"], [class*="_header "]):has([data-conversation-header-leading]) :is([class$="_tabs"], [class*="_tabs "]){display:none!important}
+
+:is([class$="_scrollBody"], [class*="_scrollBody "]){padding-top:0!important}
+
+/* Пустое состояние.
+ *
+ * Замер: заголовок 78,263 197x32, бейдж «Предварительная версия» 95,301 163x20 — смещён
+ * на 17 px вправо от заголовка и прижат к нему на 6 px. Выглядит как случайно
+ * приклеенная плашка. Разводим по вертикали и центруем по одной оси с заголовком.
+ */
+:is([class$="_previewBadge"], [class*="_previewBadge "]){margin-top:.625rem!important;align-self:center!important}
+
+[data-actions-reveal] :is([class$="_action"], [class*="_action "]){width:2.75rem!important;height:2.75rem!important}
+

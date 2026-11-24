@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Как подключиться
+    url: https://github.com/nemezida1337/ddeck-client/blob/main/docs/CONNECT.md
+    about: Инструкция и разбор ошибок подключения
+  - name: Security
+    url: https://github.com/nemezida1337/ddeck-client/security/advisories/new
+    about: Сообщить об уязвимости приватно
